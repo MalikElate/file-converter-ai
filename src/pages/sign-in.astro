@@ -1,0 +1,28 @@
+---
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { SignUp as SignUpComponent } from "@clerk/astro/components";
+---
+
+<AuthLayout title="RFT - Sign In">
+  <main>
+    <SignUpComponent
+      signInFallbackRedirectUrl="/pricing"
+      forceRedirectUrl="/pricing"
+    />
+  </main>
+</AuthLayout>
+
+<style>
+    main {
+      margin: auto;
+      padding: 1rem;
+      width: 800px;
+      max-width: calc(100% - 2rem);
+      font-size: 20px;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+</style>
+

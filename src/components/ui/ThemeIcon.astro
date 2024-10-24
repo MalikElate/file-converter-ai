@@ -1,0 +1,28 @@
+---
+import { Moon, Sun } from "lucide-react";
+---
+
+<button id="themeToggle">
+    <Sun className="h-[1.2rem] w-[1.2rem] transition-all dark:hidden" />
+    <Moon className="h-[1.2rem] w-[1.2rem] transition-all hidden dark:block" />
+</button>
+
+<style>
+    #themeToggle {
+        border: 0;
+        background: none;
+    }
+    .sun {
+        fill: black;
+    }
+    .moon {
+        fill: transparent;
+    }
+
+    :global(.dark) .sun {
+        fill: transparent;
+    }
+    :global(.dark) .moon {
+        fill: white;
+    }
+</style>

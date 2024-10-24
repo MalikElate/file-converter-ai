@@ -1,0 +1,12 @@
+---
+// frontend/src/components/ToasterSetup.astro
+---
+
+<script>
+  import { Toaster } from 'sonner'
+  import React from 'react'
+  import ReactDOM from 'react-dom/client'
+
+  const root = ReactDOM.createRoot(document.body.appendChild(document.createElement('div')))
+  root.render(React.createElement(Toaster))
+</script>

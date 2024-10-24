@@ -1,0 +1,78 @@
+---
+import Nav from "../components/nav.astro";
+import Footer from "../components/footer.astro";
+import ToasterSetup from "../components/ToasterSetup.astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const isProd = import.meta.env.PROD;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline defer src="https://app.lemonsqueezy.com/js/lemon.js"></script>
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script
+      is:inline
+      defer
+      data-domain="rapidfiletransfer.com"
+      src={isProd
+        ? "https://plausible.io/js/script.tagged-events.js"
+        : "https://plausible.io/js/script.local.js"}></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="font-sans">
+    <div class="content">
+      <Nav />
+      <slot />
+    </div>
+    <Footer />
+    <ToasterSetup />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --accent: 136, 58, 234;
+    --accent-light: 224, 204, 250;
+    --accent-dark: 49, 10, 101;
+    --accent-gradient: linear-gradient(
+      45deg,
+      rgb(var(--accent)),
+      rgb(var(--accent-light)) 30%,
+      white 60%
+    );
+  }
+  html {
+    background: white;
+    height: 100%;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .content {
+    flex: 1;
+  }
+  code {
+    font-family:
+      Menlo,
+      Monaco,
+      Lucida Console,
+      Liberation Mono,
+      DejaVu Sans Mono,
+      Bitstream Vera Sans Mono,
+      Courier New,
+      monospace;
+  }
+</style>

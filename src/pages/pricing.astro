@@ -1,0 +1,26 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+import PricingSectionCards from "../components/pricingUI.tsx";
+---
+
+<Layout title="RFT - Pricing">
+    <article class="max-w-4xl mx-auto px-4">
+        <PricingSectionCards client:load/>
+    </article>
+    <style>
+        .pricing-section {
+            padding: 2rem 0.5rem;
+            text-align: center;
+        }
+        .pricing-section h2 {
+            margin-bottom: 2rem;
+        }
+        .pricing-section .border {
+            transition: transform 0.2s;
+        }
+        .pricing-section .border:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</Layout>
