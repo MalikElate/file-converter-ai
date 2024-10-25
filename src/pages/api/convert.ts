@@ -14,43 +14,33 @@ const anthropic = new Anthropic({
 
 export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join(process.cwd(), 'images');
-    
+
     // Ensure the images directory exists
     await fs.mkdir(imagesDir, { recursive: true });
     const formData = await request.formData();
-   
-    const imageFile = formData.get('file0') as File;
-    if (!imageFile) {
+
+    let imageFiles: File[] = [];
+    const imageFile1 = formData.get('file0') as File;
+    if (!imageFile1) {
         throw new Error('No image file provided');
+    } else {
+        imageFiles.push(imageFile1);
     }
-    const imageBuffer = await imageFile.arrayBuffer();
-    await fs.writeFile(path.join(imagesDir, imageFile.name), Buffer.from(imageBuffer));
-    
-    console.log('Image file:', imageFile.name);
+    const imageFile2 = formData.get('file1') as File;
+    if (imageFile2) {
+        imageFiles.push(imageFile2);
+    }
+
+    const imageFile3 = formData.get('file2') as File;
+    if (imageFile3) {
+        imageFiles.push(imageFile3);
+    }
 
     const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file:";
 
     try {
-        // const formData = await request.formData();
         const prompt = formData.get('prompt') as string;
-        const imageFile = formData.get('file0') as File;
         console.log('Prompt:', prompt);
-        console.log('Image file:', imageFile);
-        
-
-        if (!imageFile) {
-            console.log('No image file provided');
-            return new Response(JSON.stringify({ error: 'No image file provided' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-
-        // Save the uploaded image
-        const imageBuffer = await imageFile.arrayBuffer();
-        const imageFileName = `image_${uuidv4()}.png`;
-        const imagePath = path.join(imagesDir, imageFileName);
-        await fs.writeFile(imagePath, Buffer.from(imageBuffer));
 
         // Send prompt to Anthropic
         const msg = await anthropic.messages.create({
@@ -75,18 +65,32 @@ export const POST: APIRoute = async ({ request }) => {
         const workerFileName = `worker.${uuidv4()}.js`;
         const workersDir = path.join(process.cwd(), 'src', 'workers');
         const workerFilePath = path.join(workersDir, workerFileName);
+        const content = msg.content[0];
+        let imagePath1;
+        let imagePath2;
+        let imagePath3; 
+        if (imageFile1) {
+            imagePath1 = path.join(imagesDir, imageFiles[0].name);
+        }
+        if (imageFile2) {
+            imagePath2 = path.join(imagesDir, imageFiles[1].name);
+        }
+        if (imageFile3) {
+            imagePath3 = path.join(imagesDir, imageFiles[2].name);
+        }
 
-        // Ensure the workers directory exists
         await fs.mkdir(workersDir, { recursive: true });
 
         // Write the worker file
-        const content = msg.content[0];
         if ('text' in content) {
             // Update the worker file content to include the image path
-            const workerContent = `
-                const imagePath = '${imagePath}';
-                ${content.text}
-            `;
+            const workerContentTemp = `
+            const imagePath1 = '${imagePath1}';
+            const imagePath2 = '${imagePath2}';
+            const imagePath3 = '${imagePath3}';
+            ${content.text}
+        `;
+            const workerContent = workerContentTemp
             await fs.writeFile(workerFilePath, workerContent);
             console.log(content);
         } else {
@@ -94,7 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
 
         // Start the worker in a new thread
-        const worker = new Worker(workerFilePath, { workerData: { imagePath } });
+        const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
 
         worker.on('message', (message) => {
             console.log('Message from worker:', message);
