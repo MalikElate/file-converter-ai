@@ -19,24 +19,33 @@ export const POST: APIRoute = async ({ request }) => {
     await fs.mkdir(imagesDir, { recursive: true });
     const formData = await request.formData();
 
+
     let imageFiles: File[] = [];
     const imageFile1 = formData.get('file0') as File;
     if (!imageFile1) {
         throw new Error('No image file provided');
     } else {
+        // Convert the File object to a Buffer before writing
+        const buffer = Buffer.from(await imageFile1.arrayBuffer());
+        // let fileName = 'file0' + `.${}`;
+        await fs.writeFile(path.join(imagesDir, 'file0.png'), buffer);
         imageFiles.push(imageFile1);
     }
     const imageFile2 = formData.get('file1') as File;
     if (imageFile2) {
+        const buffer = Buffer.from(await imageFile2.arrayBuffer());
+        await fs.writeFile(path.join(imagesDir, 'file1.png'), buffer);  
         imageFiles.push(imageFile2);
     }
 
     const imageFile3 = formData.get('file2') as File;
     if (imageFile3) {
+        const buffer = Buffer.from(await imageFile3.arrayBuffer());
+        await fs.writeFile(path.join(imagesDir, 'file2.png'), buffer);
         imageFiles.push(imageFile3);
     }
 
-    const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file:";
+    const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0, if there are two the files will be called file0 and file1, if there are three the files will be called file0, file1, and file2 | after all the scripts are done running send the files back to the server using const { parentPort, workerData } = require('worker_threads'); parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
 
     try {
         const prompt = formData.get('prompt') as string;
@@ -70,13 +79,13 @@ export const POST: APIRoute = async ({ request }) => {
         let imagePath2;
         let imagePath3; 
         if (imageFile1) {
-            imagePath1 = path.join(imagesDir, imageFiles[0].name);
+            imagePath1 = path.join(imagesDir, `${imageFiles[0].name}.png`);
         }
         if (imageFile2) {
-            imagePath2 = path.join(imagesDir, imageFiles[1].name);
+            imagePath2 = path.join(imagesDir, `${imageFiles[1].name}.png`);
         }
         if (imageFile3) {
-            imagePath3 = path.join(imagesDir, imageFiles[2].name);
+            imagePath3 = path.join(imagesDir, `${imageFiles[2].name}.png`);
         }
 
         await fs.mkdir(workersDir, { recursive: true });
@@ -97,11 +106,13 @@ export const POST: APIRoute = async ({ request }) => {
             throw new Error('Unexpected content type in response');
         }
 
+        let newFiles: File[] = [];
         // Start the worker in a new thread
         const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
 
         worker.on('message', (message) => {
             console.log('Message from worker:', message);
+            newFiles = message;
         });
 
         worker.on('error', (error) => {
@@ -114,7 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
             fs.unlink(workerFilePath).catch(console.error);
         });
 
-        return new Response(JSON.stringify({ message: 'Worker started successfully' }), {
+        return new Response(JSON.stringify({ message: 'Worker started successfully', newFiles }), {
             status: 200,
             headers: {
                 'Content-Type': 'application/json'
@@ -130,3 +141,4 @@ export const POST: APIRoute = async ({ request }) => {
         });
     }
 };
+
