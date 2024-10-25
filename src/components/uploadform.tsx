@@ -17,10 +17,30 @@ export default function FileConverterAI() {
     setFiles(files.filter(file => file !== fileToRemove))
   }
 
-  const handleSubmit = () => {
-    console.log('Files:', files)
-    console.log('Prompt:', prompt)
-    // Here you would typically send the files and prompt to your AI service
+  const handleSubmit = async () => {
+    try {
+      const formData = new FormData();
+      files.forEach((file, index) => {
+        formData.append(`file${index}`, file);
+      });
+      formData.append('prompt', prompt);
+
+      const response = await fetch('/api/convert', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Server response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('Server response:', result);
+      // Handle the server response here (e.g., show a success message, update UI)
+    } catch (error) {
+      console.error('Error submitting files and prompt:', error);
+      // Handle the error here (e.g., show an error message to the user)
+    }
   }
 
   return (
