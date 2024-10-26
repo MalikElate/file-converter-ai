@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
-  const [stagedFiles, setStagedFiles] = useState<File[]>([]); 
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
   const [prompt, setPrompt] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,26 +36,13 @@ export default function FileConverterAI() {
           `Server response was not ok: ${response.status} ${response.statusText}`
         );
       }
-
-      console.log("Response:", response);
-      // const contentType = response.headers.get("content-type");
-      // if (contentType && contentType.includes("application/json")) {
-      //   const result = await response.json();
-      //   console.log("JSON response:", result);
-      // } else {
-      //   const resultFormData = await response.formData();
-      //   const resultFiles = resultFormData.getAll('file0');
-      //   setStagedFiles((prevStaged) => [
-      //     ...prevStaged,
-      //     ...resultFiles.filter((file): file is File => file instanceof File),
-      //   ]);
-      //   console.log("Staged files:", stagedFiles);
-      // }
-    } 
-    catch (error) {
+      console.log(response);
+      const responseData = await response.json();
+      console.log(responseData);
+    } catch (error) {
       console.error("Error submitting files and prompt:", error);
     }
-    };
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-4xl space-y-4">
@@ -86,18 +73,18 @@ export default function FileConverterAI() {
       {stagedFiles.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
           {stagedFiles.map((file, index) => (
-          <div key={index} className="relative group">
-            <div className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm">
-              {file.name}
+            <div key={index} className="relative group">
+              <div className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm">
+                {file.name}
+              </div>
+              <button
+                onClick={() => removeFile(file)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => removeFile(file)}
-              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
+          ))}
         </div>
       )}
 

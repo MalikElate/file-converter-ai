@@ -13,7 +13,7 @@ const anthropic = new Anthropic({
 });
 
 export const POST: APIRoute = async ({ request }) => {
-    const imagesDir = path.join(process.cwd(), 'images');
+    const imagesDir = path.join(process.cwd(), 'public');
 
     // Ensure the images directory exists
     await fs.mkdir(imagesDir, { recursive: true });
@@ -128,7 +128,7 @@ export const POST: APIRoute = async ({ request }) => {
                     resolve(new Response(formData, {
                         status: 200,
                         headers: {
-                            'Content-Type': 'multipart/form-data'
+                            'Content-Type': 'image/png'
                         }
                     }));
                 }
