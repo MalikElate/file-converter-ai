@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request }) => {
     const imageFile2 = formData.get('file1') as File;
     if (imageFile2) {
         const buffer = Buffer.from(await imageFile2.arrayBuffer());
-        await fs.writeFile(path.join(imagesDir, 'file1.png'), buffer);  
+        await fs.writeFile(path.join(imagesDir, 'file1.png'), buffer);
         imageFiles.push(imageFile2);
     }
 
@@ -44,8 +44,8 @@ export const POST: APIRoute = async ({ request }) => {
         await fs.writeFile(path.join(imagesDir, 'file2.png'), buffer);
         imageFiles.push(imageFile3);
     }
-
-    const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0, if there are two the files will be called file0 and file1, if there are three the files will be called file0, file1, and file2 | after all the scripts are done running send the files back to the server using const { parentPort, workerData } = require('worker_threads'); parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
+    console.log(imageFiles,);
+    const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.png, if there are two the files will be called file0.png and file1.png, if there are three the files will be called file0.png, file1.png, and file2.png | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
 
     try {
         const prompt = formData.get('prompt') as string;
@@ -75,9 +75,9 @@ export const POST: APIRoute = async ({ request }) => {
         const workersDir = path.join(process.cwd(), 'src', 'workers');
         const workerFilePath = path.join(workersDir, workerFileName);
         const content = msg.content[0];
-        let imagePath1;
-        let imagePath2;
-        let imagePath3; 
+        let imagePath1: any;
+        let imagePath2: any;
+        let imagePath3: any;
         if (imageFile1) {
             imagePath1 = path.join(imagesDir, `${imageFiles[0].name}.png`);
         }
@@ -106,31 +106,59 @@ export const POST: APIRoute = async ({ request }) => {
             throw new Error('Unexpected content type in response');
         }
 
-        let newFiles: File[] = [];
-        // Start the worker in a new thread
-        const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
 
-        worker.on('message', (message) => {
-            console.log('Message from worker:', message);
-            newFiles = message;
+            worker.on('message', async (message) => {
+                console.log('Message from worker:', message);
+                if (message.length > 0) {
+                    let hotNreadyFiles: File[] = [];
+                    for (const fileName of message) {
+                        const filePath = path.join(imagesDir, fileName);
+                        const fileBuffer = await fs.readFile(filePath);
+                        const file = new File([fileBuffer], fileName, { type: 'image/png' });
+                        hotNreadyFiles.push(file);
+                    }
+
+                    const formData = new FormData();
+                    hotNreadyFiles.forEach((file, index) => {
+                        formData.append(`file${index}`, file);
+                    });
+
+                    resolve(new Response(formData, {
+                        status: 200,
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }));
+                }
+            });
+
+            worker.on('error', (error) => {
+                console.error('Worker error:', error);
+                reject(new Response(JSON.stringify({ message: 'Worker error', error: error.message }), {
+                    status: 500,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }));
+            });
+
+            worker.on('exit', (code) => {
+                console.log(`Worker exited with code ${code}`);
+                // Clean up the worker file
+                fs.unlink(workerFilePath).catch(console.error);
+                if (code !== 0) {
+                    reject(new Response(JSON.stringify({ message: 'Worker exited with non-zero code', code }), {
+                        status: 500,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }));
+                }
+            });
         });
 
-        worker.on('error', (error) => {
-            console.error('Worker error:', error);
-        });
-
-        worker.on('exit', (code) => {
-            console.log(`Worker exited with code ${code}`);
-            // Clean up the worker file
-            fs.unlink(workerFilePath).catch(console.error);
-        });
-
-        return new Response(JSON.stringify({ message: 'Worker started successfully', newFiles }), {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
     } catch (error) {
         console.error('Error processing request:', error);
         return new Response(JSON.stringify({ error: 'Internal server error' }), {
@@ -141,4 +169,3 @@ export const POST: APIRoute = async ({ request }) => {
         });
     }
 };
-
