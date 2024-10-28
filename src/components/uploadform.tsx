@@ -19,6 +19,7 @@ export default function FileConverterAI() {
   };
 
   const handleSubmit = async () => {
+    setStagedFiles([]);
     try {
       const formData = new FormData();
       files.forEach((file, index) => {

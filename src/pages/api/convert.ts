@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
-import path from 'path';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { Anthropic } from "@anthropic-ai/sdk";
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
