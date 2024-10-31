@@ -1,0 +1,82 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+---
+
+<Layout title="RFT - privacy">
+    <article class="max-w-2xl mx-auto px-4 py-8">
+        <section class="prose about-section">
+            <h2 class="mt-4">Privacy</h2>
+            <span>
+                Info is used only for sending your files and is not shared with
+                third parties.
+            </span>
+            <span>Files are stored in AWS s3 and deleted after 1 week</span>
+            <span>
+                The only personal data collected is the sender and receiver
+                email addresses through the form
+            </span>
+            <span>There are no cookies or cross-site tracking.</span> 
+        </section>
+      </article>
+    </article>
+
+    <style>
+        main {
+            margin: auto;
+            padding: 1rem;
+            width: 800px;
+            max-width: calc(100% - 2rem);
+            font-size: 20px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .about-section {
+            min-width: 300px;
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem 0.5rem;
+            text-align: left;
+        }
+        h2 {
+            align-self: flex-start;
+            font-size: 1.25rem;
+            font-weight: bold;
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+        }
+        span {
+            align-self: flex-start;
+            text-align: left;
+            color: #666;
+            font-size: 0.875rem;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        h1:nth-of-type(2) {
+            margin-top: 30px;
+        }
+        @media (min-width: 768px) {
+            .about-section {
+                padding: 3rem 0.5rem 2rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            .about-section {
+                padding: 3rem 0.5rem 5rem;
+            }
+        }
+    </style>
+</Layout>

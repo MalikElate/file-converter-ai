@@ -111,27 +111,12 @@ export const POST: APIRoute = async ({ request }) => {
 
             worker.on('message', async (message) => {
                 console.log('Message from worker:', message);
-                if (message.length > 0) {
-                    let hotNreadyFiles: File[] = [];
-                    for (const fileName of message) {
-                        const filePath = path.join(imagesDir, fileName);
-                        const fileBuffer = await fs.readFile(filePath);
-                        const file = new File([fileBuffer], fileName, { type: 'image/png' });
-                        hotNreadyFiles.push(file);
+                resolve(new Response(JSON.stringify(message), {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
-
-                    const formData = new FormData();
-                    hotNreadyFiles.forEach((file, index) => {
-                        formData.append(`file${index}`, file);
-                    });
-
-                    resolve(new Response(formData, {
-                        status: 200,
-                        headers: {
-                            'Content-Type': 'image/png'
-                        }
-                    }));
-                }
+                }));
             });
 
             worker.on('error', (error) => {

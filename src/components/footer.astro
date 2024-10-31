@@ -1,27 +1,49 @@
 ---
-
+import { Button } from "./ui/button";
+const { pathname } = Astro.url;
 ---
 
 <footer>
-    <div class="text-xs text-gray-500">
-        🌴 Email support: 8am - 11pm CST: woodskullcontent@gmail.com
-    </div>
+  {
+    pathname === "/blog" && (
+      <footer class="blog-controls">
+        <div class="flex justify-between items-center">
+          <Button variant="outline">← Previous Post</Button>
+          <Button variant="outline">Next Post →</Button>
+        </div>
+      </footer>
+    )
+  }
+  <span class="text-xs text-gray-500">
+    🌴 Email support: woodskullcontent@gmail.com •
+  </span>
+  <span class="text-xs text-gray-500">
+    <a href="/privacy">Privacy Policy</a> •
+  </span>
+  <span class="text-xs text-gray-500">
+    <a href="/terms">Terms of Service</a>
+  </span>
 </footer>
 
 <style>
-    footer {
-        width: 100%;
-        max-width: 1280px;
-        margin-left: auto;
-        margin-right: auto;
-        padding: 1rem;
-        text-align: center;
-    }
-    .text-xs {
-        font-size: 0.75rem;
-        line-height: 1rem;
-    }
-    .text-gray-500 {
-        color: #6b7280;
-    }
+  .blog-controls {
+    border-top: 1px solid;
+    padding-top: 2rem;
+    max-width: 800px;
+  }
+  footer {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+    text-align: center;
+  }
+  .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  .text-gray-500 {
+    color: #6b7280;
+  }
 </style>
