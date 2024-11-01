@@ -7,9 +7,6 @@ import { useState } from "react";
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
   const [stagedFiles, setStagedFiles] = useState<string[]>([
-    "test.png",
-    "test2.png",
-    "test3.png",
   ]);
 
   const handleAccept = () => {
