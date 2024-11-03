@@ -5,6 +5,7 @@ import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as dotenv from 'dotenv';
+import { utapi } from "src/server/uploadthing.ts";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ const anthropic = new Anthropic({
 });
 
 export const POST: APIRoute = async ({ request }) => {
-    const imagesDir = path.join(process.cwd(), 'public');
+    const imagesDir = path.join(process.cwd(), 'images');
 
     // Ensure the images directory exists
     await fs.mkdir(imagesDir, { recursive: true });
@@ -25,9 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!imageFile1) {
         throw new Error('No image file provided');
     } else {
-        // Convert the File object to a Buffer before writing
         const buffer = Buffer.from(await imageFile1.arrayBuffer());
-        // let fileName = 'file0' + `.${}`;
         await fs.writeFile(path.join(imagesDir, 'file0.png'), buffer);
         imageFiles.push(imageFile1);
     }
@@ -111,12 +110,25 @@ export const POST: APIRoute = async ({ request }) => {
 
             worker.on('message', async (message) => {
                 console.log('Message from worker:', message);
+                const files = message.map((file: string) => new File([file], file, { type: "image/png" }));
+
+                await utapi.uploadFiles(files).then((result) => { 
+                    console.log(result);
+                    resolve(new Response(JSON.stringify(result), {
+                        status: 200,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }));    
+                });
+                //TODO: get the files from the message, upload them to UT via server side upload, on onUploadComplete return all the keys to the client in an object 
+                
                 resolve(new Response(JSON.stringify(message), {
                     status: 200,
                     headers: {
                         'Content-Type': 'application/json'
                     }
-                }));
+                }));    
             });
 
             worker.on('error', (error) => {

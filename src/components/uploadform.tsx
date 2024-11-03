@@ -1,19 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { FileInput } from "@/components/ui/file-input";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Download, Minus, Plus, X } from "lucide-react";
+import { Check, Download, Minus, Plus, X, ArrowUp } from "lucide-react"; // Added ArrowUp icon
 import { useState } from "react";
 
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
-  const [stagedFiles, setStagedFiles] = useState<string[]>([
-  ]);
+  const [stagedFiles, setStagedFiles] = useState<string[]>([]);
 
   const handleAccept = () => {
-    // setFiles(stagedFiles)
     let newFiles = stagedFiles.map((file) => new File([file], file, { type: "image/png" }));
-    setFiles(newFiles)
-    setStagedFiles([])
+    setFiles(newFiles);
+    setStagedFiles([]);
   };
 
   const handleReject = () => {
@@ -37,7 +35,6 @@ export default function FileConverterAI() {
   };
 
   const handleDownload = () => {
-    // download the files in the staged files array
     stagedFiles.forEach((file) => {
       const link = document.createElement("a");
       link.href = `/${file}`;
@@ -67,7 +64,6 @@ export default function FileConverterAI() {
       const responseData = await response.json();
       setStagedFiles(responseData);
       console.log(responseData);
-      // add a the files in the response data to the staged files, responseData is an array of file names that are in the public folder so we need to get the full path for each one
     } catch (error) {
       console.error("Error submitting files and prompt:", error);
     }
@@ -112,7 +108,7 @@ export default function FileConverterAI() {
         {stagedFiles.length > 0 && (
           <div className="flex items-center mb-2">
             <Plus className="w-4 h-4 mr-2 text-green-600" />
-          <span className="font-semibold">Keep</span>
+            <span className="font-semibold">Keep</span>
           </div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -126,7 +122,7 @@ export default function FileConverterAI() {
               </button>
               <img
                 className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-                src={`/${file}`}
+                src={`https://utfs.io/f/${file}`}
                 alt={file}
               />
             </div>
@@ -149,20 +145,28 @@ export default function FileConverterAI() {
 
       <div className="flex space-x-4 mb-6">
         <Textarea
-          placeholder="Enter your prompt here..."
+          placeholder="How can File Converter help you today?"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           className="flex-grow h-10 min-h-[40px] resize-none py-1.5 transition-height duration-200"
           style={{ height: "40px" }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && e.shiftKey) {
-              e.currentTarget.style.height = "auto";
-              e.currentTarget.style.height =
-                e.currentTarget.scrollHeight + "px";
+            if (e.key === "Enter") {
+              if (e.shiftKey) {
+                // Allow new lines with Shift+Enter
+                e.currentTarget.style.height = "auto";
+                e.currentTarget.style.height = e.currentTarget.scrollHeight + "px";
+              } else {
+                // Prevent default to avoid new line
+                e.preventDefault();
+                handleSubmit();
+              }
             }
           }}
         />
-        <Button onClick={handleSubmit}>Send Prompt</Button>
+        <Button className="px-3 py-1.5" onClick={handleSubmit}>
+          <ArrowUp className="w-4 h-4" /> 
+        </Button>
       </div>
       <Button onClick={handleDownload}>
         <Download className="w-4 h-4 mr-2" />

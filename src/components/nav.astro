@@ -1,11 +1,11 @@
 ---
 import ThemeIcon from "@/components/ui/ThemeIcon.astro";
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  SignInButton,
-} from "@clerk/astro/components";
+// import {
+//   SignedIn,
+//   SignedOut,
+//   UserButton,
+//   SignInButton,
+// } from "@clerk/astro/components";
 ---
 
 <nav>
@@ -14,15 +14,15 @@ import {
     <div class="flex gap-4">
       <a href="/blog" class="font-bold">Blog</a>
       <!-- <a href="/pricing" class="font-bold">Pricing</a> -->
-      <SignedOut>
+      <!-- <SignedOut>
         <SignInButton mode="modal">
           <a class="font-bold">Sign in</a>
         </SignInButton>
-      </SignedOut>
+      </SignedOut> -->
       <ThemeIcon />
-      <SignedIn>
+      <!-- <SignedIn>
         <UserButton />
-      </SignedIn>
+      </SignedIn> -->
     </div>
   </div>
 </nav>
