@@ -9,15 +9,16 @@ console.log("Redirect URL:", signUpRedirectUrl);
 
 <Layout title="File Converter AI">
   <main>
-    <div class="hero">
-      <h1>File Converter AI</h1>
-      <div class="sub-header">
+    <!-- <div class="hero"> -->
+      <!-- <h1>File Converter AI</h1> -->
+      <!-- <div class="sub-header">
         I made this because I needed a simple way to do bulk file conversions - <a
           href="https://twitter.com/skull_wooden">@skull_wooden</a
         >
-      </div>
-      <UploadForm client:load />
-    </div>
+      </div> -->
+    <!-- </div> -->
+    <div class="divider"></div>
+    <UploadForm client:load />
   </main>
 </Layout>
 
@@ -100,5 +101,8 @@ console.log("Redirect URL:", signUpRedirectUrl);
   }
   .sub-header a:hover {
     text-decoration: underline;
+  }
+  .divider {
+    margin-top: 1rem;
   }
 </style>

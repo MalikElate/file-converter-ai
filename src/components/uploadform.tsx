@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { FileInput } from "@/components/ui/file-input";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Download, Minus, Plus, X, ArrowUp } from "lucide-react"; // Added ArrowUp icon
+import { ArrowUp, Check, Minus, Plus, X } from "lucide-react"; // Added ArrowUp icon
 import { useState } from "react";
+import FileDownloader from "./download-button";
 
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
@@ -52,6 +53,7 @@ export default function FileConverterAI() {
         formData.append(`file${index}`, file);
       });
       formData.append("prompt", prompt);
+      setPrompt("");
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -80,7 +82,7 @@ export default function FileConverterAI() {
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
       />
 
-      <div className={`p-4 rounded-lg mb-6 ${stagedFiles.length > 0 ? 'bg-red-100' : ''}`}>
+      <div className={`p-4 rounded-lg mb-6 ${stagedFiles.length > 0 ? 'bg-red-100 dark:bg-red-950/50' : ''}`}>
         {stagedFiles.length > 0 && (
           <div className="flex items-center mb-2">
             <Minus className="w-4 h-4 mr-2 text-red-600" />
@@ -106,7 +108,7 @@ export default function FileConverterAI() {
         </div>
       </div>
 
-      <div className={`p-4 rounded-lg mb-6 ${stagedFiles.length > 0 ? 'bg-green-100' : ''}`}>
+      <div className={`p-4 rounded-lg mb-6 ${stagedFiles.length > 0 ? 'bg-green-100 dark:bg-green-950/50' : ''}`}>
         {stagedFiles.length > 0 && (
           <div className="flex items-center mb-2">
             <Plus className="w-4 h-4 mr-2 text-green-600" />
@@ -170,10 +172,7 @@ export default function FileConverterAI() {
           <ArrowUp className="w-4 h-4" /> 
         </Button>
       </div>
-      <Button onClick={handleDownload}>
-        <Download className="w-4 h-4 mr-2" />
-        Download Files
-      </Button>
+      <FileDownloader fileKeys={stagedFiles} />
     </div>
   );
 }
