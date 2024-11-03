@@ -110,11 +110,21 @@ export const POST: APIRoute = async ({ request }) => {
 
             worker.on('message', async (message) => {
                 console.log('Message from worker:', message);
-                const files = message.map((file: string) => new File([file], file, { type: "image/png" }));
+                
+                // Read the files from the images directory and create File objects
+                const files = await Promise.all(message.map(async (filename: string) => {
+                    const filePath = path.join(process.cwd(), 'images', filename);
+                    const fileBuffer = await fs.readFile(filePath);
+                    return new File([fileBuffer], filename, { type: "image/png" });
+                }));
+                
+                console.log("files", files);
 
-                await utapi.uploadFiles(files).then((result) => { 
-                    console.log(result);
-                    resolve(new Response(JSON.stringify(result), {
+                await utapi.uploadFiles(files).then((result) => {
+                    console.log("result", result);
+                    const fileKeys = result.map(item => item.data?.key);
+                    console.log("fileKeys", fileKeys);
+                    resolve(new Response(JSON.stringify(fileKeys), {
                         status: 200,
                         headers: {
                             'Content-Type': 'application/json'

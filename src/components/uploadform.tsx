@@ -7,8 +7,11 @@ import { useState } from "react";
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
   const [stagedFiles, setStagedFiles] = useState<string[]>([]);
+  const [ prompt, setPrompt] = useState("");
+  const [changesAccepted, setChangesAccepted] = useState(false);
 
   const handleAccept = () => {
+    changesAccepted || setChangesAccepted(true);
     let newFiles = stagedFiles.map((file) => new File([file], file, { type: "image/png" }));
     setFiles(newFiles);
     setStagedFiles([]);
@@ -18,7 +21,6 @@ export default function FileConverterAI() {
     setStagedFiles([]); 
   };
 
-  const [prompt, setPrompt] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -96,7 +98,7 @@ export default function FileConverterAI() {
               </button>
               <img
                 className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-                src={URL.createObjectURL(file)}
+                src={changesAccepted ? `https://utfs.io/f/${file.name}` : URL.createObjectURL(file)}
                 alt={file.name}
               />
             </div>
