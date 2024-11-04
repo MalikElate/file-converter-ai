@@ -6,6 +6,7 @@ import { Worker } from 'worker_threads';
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as dotenv from 'dotenv';
 import { utapi } from "src/server/uploadthing.ts";
+import sharp from 'sharp';
 
 dotenv.config();
 
@@ -44,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
         imageFiles.push(imageFile3);
     }
     console.log(imageFiles,);
-    const systemPrompt = "Given the input return a node js script | use import and not require syntax in the script | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.png, if there are two the files will be called file0.png and file1.png, if there are three the files will be called file0.png, file1.png, and file2.png | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
+    const systemPrompt = "Given the input return a node js script | use the require syntax in the script | for image resizing use the sharp library, do not include the const sharp = require('sharp'); in the script | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.png, if there are two the files will be called file0.png and file1.png, if there are three the files will be called file0.png, file1.png, and file2.png | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
 
     try {
         const prompt = formData.get('prompt') as string;
@@ -91,8 +92,8 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Write the worker file
         if ('text' in content) {
-            // Update the worker file content to include the image path
             const workerContentTemp = `
+            const sharp = ${sharp.toString()};
             const imagePath1 = '${imagePath1}';
             const imagePath2 = '${imagePath2}';
             const imagePath3 = '${imagePath3}';
