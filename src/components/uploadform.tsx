@@ -238,7 +238,7 @@ export default function FileConverterAI() {
           Resize to 200px by 200px
         </Badge>
         <Badge variant="outline" onClick={() => setPrompt("Compress image")}>
-          Compress image
+          Compress image(s)
         </Badge>
       </div>
       <FileDownloader fileKeys={stagedFiles} />

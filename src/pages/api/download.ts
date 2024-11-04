@@ -6,8 +6,8 @@ import axios from 'axios';
 import { zip } from 'zip-a-folder';
 
 export const POST: APIRoute = async ({ request }) => {
-    const editedImagesDir = path.join(process.cwd(), 'edited-images');
-    const zipPath = path.join(process.cwd(), 'edited-images.zip');
+    const editedImagesDir = path.join('/tmp', 'edited-images');
+    const zipPath = path.join('/tmp', 'edited-images.zip');
     
     await fs.mkdir(editedImagesDir, { recursive: true });
     

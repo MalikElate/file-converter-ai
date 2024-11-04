@@ -14,7 +14,7 @@ const anthropic = new Anthropic({
 });
 
 export const POST: APIRoute = async ({ request }) => {
-    const imagesDir = path.join(process.cwd(), 'images');
+    const imagesDir = path.join('/tmp', 'images');
 
     // Ensure the images directory exists
     await fs.mkdir(imagesDir, { recursive: true });
@@ -71,7 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Create a unique filename for the worker
         const workerFileName = `worker.${uuidv4()}.js`;
-        const workersDir = path.join(process.cwd(), 'src', 'workers');
+        const workersDir = path.join('/tmp', 'workers');
         const workerFilePath = path.join(workersDir, workerFileName);
         const content = msg.content[0];
         let imagePath1: any;
