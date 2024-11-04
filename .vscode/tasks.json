@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Clean Zip Files",
+            "type": "shell",
+            "command": "rm -f edited-images.zip",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean Edited Image Directory",
+            "type": "shell",
+            "command": "rm -rf edited-images/*",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean Image Directory",
+            "type": "shell",
+            "command": "rm -rf images/*",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean All",
+            "dependsOn": ["Clean Zip Files", "Clean Image Directory"],
+            "problemMatcher": []
+        }
+    ]
+}

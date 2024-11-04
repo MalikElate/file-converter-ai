@@ -9,26 +9,38 @@ interface FileDownloaderProps {
 export default function FileDownloader({ fileKeys }: FileDownloaderProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Example array of file URLs
-  const fileUrls = fileKeys.map((key) => `https://utfs.io/f/${key}`);
-
-  const downloadFile = async (url: string) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to download file: ${response.status} ${response.statusText}`
-      );
-    }
-    const blob = await response.blob();
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = url.split("/").pop() || "download"; // Provide fallback filename
-    link.click();
-  };
-
   const downloadAllFiles = async () => {
     setIsDownloading(true);
-    fileUrls.map((url) => downloadFile(url));
+
+    try {
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(fileKeys),
+      });
+
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+
+      // Get the blob directly without parsing as JSON
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "edited-images.zip";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      alert("Error: " + (error as Error).message);
+      console.error(error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (

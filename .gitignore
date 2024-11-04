@@ -1,6 +1,9 @@
 # build output
 dist/
 images/
+edited-images/
+edited-images.zip
+
 # generated types
 .astro/
 .amplify-hosting
