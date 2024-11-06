@@ -27,14 +27,16 @@ export const POST: APIRoute = async ({ request }) => {
     await fs.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
     
     // Run npm install
+    console.log("installing dependencies");
     await new Promise((resolve, reject) => {
-        const { exec } = require('child_process');
-        exec('cd /tmp && npm install', (error: any) => {
-            if (error) {
-                console.error('Error installing dependencies:', error);
-                reject(error);
-            }
-            resolve(null);
+        import('child_process').then(({ exec }) => {
+            exec('cd /tmp && npm install', (error: any) => {
+                if (error) {
+                    console.error('Error installing dependencies:', error);
+                    reject(error);
+                }
+                resolve(null);
+            });
         });
     });
 
@@ -133,9 +135,9 @@ export const POST: APIRoute = async ({ request }) => {
             worker.on('message', async (message) => {
                 console.log('Message from worker:', message);
                 
-                // Read the files from the images directory and create File objects
+                // Read the files from the tmp/images directory instead of project images directory
                 const files = await Promise.all(message.map(async (filename: string) => {
-                    const filePath = path.join(process.cwd(), 'images', filename);
+                    const filePath = path.join('/tmp', 'images', filename);
                     const fileBuffer = await fs.readFile(filePath);
                     return new File([fileBuffer], filename, { type: "image/png" });
                 }));
