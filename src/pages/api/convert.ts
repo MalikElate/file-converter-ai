@@ -110,28 +110,28 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Run npm install with specific flags for restricted environments
         console.log("Installing worker dependencies...");
-        // await new Promise((resolve, reject) => {
-        //     exec(
-        //         'npm install --no-audit --no-fund --prefix /tmp/workers --cache /tmp/npm-cache',
-        //         {
-        //             env: {
-        //                 ...process.env,
-        //                 HOME: '/tmp', // Set HOME to /tmp for npm cache
-        //                 npm_config_cache: '/tmp/npm-cache'
-        //             }
-        //         },
-        //         (error: any, stdout: string, stderr: string) => {
-        //             if (error) {
-        //                 console.error('Error installing dependencies:', error);
-        //                 console.error('stderr:', stderr);
-        //                 reject(error);
-        //                 return;
-        //             }
-        //             console.log('stdout:', stdout);
-        //             resolve(null);
-        //         }
-        //     );
-        // });
+        await new Promise((resolve, reject) => {
+            exec(
+                'npm install --no-audit --no-fund --prefix /tmp --cache /tmp/npm-cache',
+                {
+                    env: {
+                        ...process.env,
+                        HOME: '/tmp',
+                        npm_config_cache: '/tmp/npm-cache'
+                    }
+                },
+                (error: any, stdout: string, stderr: string) => {
+                    if (error) {
+                        console.error('Error installing dependencies:', error);
+                        console.error('stderr:', stderr);
+                        reject(error);
+                        return;
+                    }
+                    console.log('stdout:', stdout);
+                    resolve(null);
+                }
+            );
+        });
 
         console.log("listing directory contents");
         await new Promise((resolve, reject) => {
