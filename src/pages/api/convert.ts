@@ -29,15 +29,15 @@ export const POST: APIRoute = async ({ request }) => {
     
     // Run npm install
     console.log("installing dependencies");
-    await new Promise((resolve, reject) => {
-        exec('npm install', (error: any) => {
-            if (error) {
-                console.error('Error installing dependencies:', error);
-                reject(error);
-            }
-            resolve(null);
-        });
-    });
+    // await new Promise((resolve, reject) => {
+    //     exec('npm install', (error: any) => {
+    //         if (error) {
+    //             console.error('Error installing dependencies:', error);
+    //             reject(error);
+    //         }
+    //         resolve(null);
+    //     });
+    // });
 
     // Ensure the images directory exists
     await mkdir(imagesDir, { recursive: true });
