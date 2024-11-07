@@ -28,7 +28,6 @@ export const POST: APIRoute = async ({ request }) => {
     await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
     
     // Run npm install
-    console.log("installing dependencies");
     // await new Promise((resolve, reject) => {
     //     exec('npm install', (error: any) => {
     //         if (error) {
