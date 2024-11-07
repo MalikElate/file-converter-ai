@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import type { APIRoute } from 'astro';
 import * as dotenv from 'dotenv';
-import { mkdir, readFile, unlink, writeFile } from 'fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import * as path from 'path';
 import { utapi } from "src/server/uploadthing.ts";
 import { v4 as uuidv4 } from 'uuid';
