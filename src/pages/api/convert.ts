@@ -97,26 +97,40 @@ export const POST: APIRoute = async ({ request }) => {
         const workersDir = path.join('/tmp', 'workers');
         const workerFilePath = path.join(workersDir, workerFileName);
 
-        // Add package.json and install dependencies in workers directory
+        // Create workers directory and package.json
+        await mkdir(workersDir, { recursive: true });
+
         const workerPackageJson = {
             "type": "module",
             "dependencies": {
                 "sharp": "latest"
             }
         };
-        await mkdir(workersDir, { recursive: true });
         await writeFile(path.join(workersDir, 'package.json'), JSON.stringify(workerPackageJson, null, 2));
 
-        // Run npm install in workers directory
-        console.log("installing worker dependencies");
+        // Run npm install with specific flags for restricted environments
+        console.log("Installing worker dependencies...");
         await new Promise((resolve, reject) => {
-            exec('cd /tmp/workers && npm install', (error: any) => {
-                if (error) {
-                    console.error('Error installing worker dependencies:', error);
-                    reject(error);
+            exec(
+                'npm install --no-audit --no-fund --prefix /tmp/workers --cache /tmp/npm-cache',
+                {
+                    env: {
+                        ...process.env,
+                        HOME: '/tmp', // Set HOME to /tmp for npm cache
+                        npm_config_cache: '/tmp/npm-cache'
+                    }
+                },
+                (error: any, stdout: string, stderr: string) => {
+                    if (error) {
+                        console.error('Error installing dependencies:', error);
+                        console.error('stderr:', stderr);
+                        reject(error);
+                        return;
+                    }
+                    console.log('stdout:', stdout);
+                    resolve(null);
                 }
-                resolve(null);
-            });
+            );
         });
 
         const content = msg.content[0];
