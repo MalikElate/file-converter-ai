@@ -1,11 +1,11 @@
-import type { APIRoute } from 'astro';
-import { v4 as uuidv4 } from 'uuid';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { Worker } from 'worker_threads';
 import { Anthropic } from "@anthropic-ai/sdk";
+import type { APIRoute } from 'astro';
 import * as dotenv from 'dotenv';
+import { mkdir, readFile, unlink, writeFile } from 'fs/promises';
+import * as path from 'path';
 import { utapi } from "src/server/uploadthing.ts";
+import { v4 as uuidv4 } from 'uuid';
+import { Worker } from 'worker_threads';
 
 dotenv.config();
 
@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
             "sharp": "latest"
         }
     };
-    await fs.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
+    await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
     
     // Run npm install
     console.log("installing dependencies");
@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     // Ensure the images directory exists
-    await fs.mkdir(imagesDir, { recursive: true });
+    await mkdir(imagesDir, { recursive: true });
     const formData = await request.formData();
 
 
@@ -51,20 +51,20 @@ export const POST: APIRoute = async ({ request }) => {
         throw new Error('No image file provided');
     } else {
         const buffer = Buffer.from(await imageFile1.arrayBuffer());
-        await fs.writeFile(path.join(imagesDir, 'file0.png'), buffer);
+        await writeFile(path.join(imagesDir, 'file0.png'), buffer);
         imageFiles.push(imageFile1);
     }
     const imageFile2 = formData.get('file1') as File;
     if (imageFile2) {
         const buffer = Buffer.from(await imageFile2.arrayBuffer());
-        await fs.writeFile(path.join(imagesDir, 'file1.png'), buffer);
+        await writeFile(path.join(imagesDir, 'file1.png'), buffer);
         imageFiles.push(imageFile2);
     }
 
     const imageFile3 = formData.get('file2') as File;
     if (imageFile3) {
         const buffer = Buffer.from(await imageFile3.arrayBuffer());
-        await fs.writeFile(path.join(imagesDir, 'file2.png'), buffer);
+        await writeFile(path.join(imagesDir, 'file2.png'), buffer);
         imageFiles.push(imageFile3);
     }
     console.log(imageFiles,);
@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
             imagePath3 = path.join(imagesDir, `${imageFiles[2].name}.png`);
         }
 
-        await fs.mkdir(workersDir, { recursive: true });
+        await mkdir(workersDir, { recursive: true });
 
         // Write the worker file
         if ('text' in content) {
@@ -122,7 +122,7 @@ export const POST: APIRoute = async ({ request }) => {
             ${content.text}
         `;
             const workerContent = workerContentTemp
-            await fs.writeFile(workerFilePath, workerContent);
+            await writeFile(workerFilePath, workerContent);
             console.log(content);
         } else {
             throw new Error('Unexpected content type in response');
@@ -138,7 +138,7 @@ export const POST: APIRoute = async ({ request }) => {
                 // Read the files from the tmp/images directory instead of project images directory
                 const files = await Promise.all(message.map(async (filename: string) => {
                     const filePath = path.join('/tmp', 'images', filename);
-                    const fileBuffer = await fs.readFile(filePath);
+                    const fileBuffer = await readFile(filePath);
                     return new File([fileBuffer], filename, { type: "image/png" });
                 }));
                 
@@ -178,7 +178,7 @@ export const POST: APIRoute = async ({ request }) => {
             worker.on('exit', (code) => {
                 console.log(`Worker exited with code ${code}`);
                 // Clean up the worker file
-                fs.unlink(workerFilePath).catch(console.error);
+                unlink(workerFilePath).catch(console.error);
                 if (code !== 0) {
                     reject(new Response(JSON.stringify({ message: 'Worker exited with non-zero code', code }), {
                         status: 500,
