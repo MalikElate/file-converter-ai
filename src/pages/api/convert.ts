@@ -96,6 +96,29 @@ export const POST: APIRoute = async ({ request }) => {
         const workerFileName = `worker.${uuidv4()}.js`;
         const workersDir = path.join('/tmp', 'workers');
         const workerFilePath = path.join(workersDir, workerFileName);
+
+        // Add package.json and install dependencies in workers directory
+        const workerPackageJson = {
+            "type": "module",
+            "dependencies": {
+                "sharp": "latest"
+            }
+        };
+        await mkdir(workersDir, { recursive: true });
+        await writeFile(path.join(workersDir, 'package.json'), JSON.stringify(workerPackageJson, null, 2));
+
+        // Run npm install in workers directory
+        console.log("installing worker dependencies");
+        await new Promise((resolve, reject) => {
+            exec('cd /tmp/workers && npm install', (error: any) => {
+                if (error) {
+                    console.error('Error installing worker dependencies:', error);
+                    reject(error);
+                }
+                resolve(null);
+            });
+        });
+
         const content = msg.content[0];
         let imagePath1: any;
         let imagePath2: any;
