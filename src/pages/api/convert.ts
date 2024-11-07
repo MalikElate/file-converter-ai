@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import type { APIRoute } from 'astro';
+import { exec } from 'child_process';
 import * as dotenv from 'dotenv';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import * as path from 'path';
@@ -29,14 +30,12 @@ export const POST: APIRoute = async ({ request }) => {
     // Run npm install
     console.log("installing dependencies");
     await new Promise((resolve, reject) => {
-        import('child_process').then(({ exec }) => {
-            exec('cd /tmp && npm install', (error: any) => {
-                if (error) {
-                    console.error('Error installing dependencies:', error);
-                    reject(error);
-                }
-                resolve(null);
-            });
+        exec('cd /tmp && npm install', (error: any) => {
+            if (error) {
+                console.error('Error installing dependencies:', error);
+                reject(error);
+            }
+            resolve(null);
         });
     });
 
