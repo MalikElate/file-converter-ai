@@ -25,6 +25,7 @@
         add credits [] .
     add arrow to footer "email me when stuff breaks" please i'm lonely []
     edit image does not check to see if there are any availble images to download []
+    remove logging in prod []
 
     upload files to uploadThing [x]
     add a download file button [x]
