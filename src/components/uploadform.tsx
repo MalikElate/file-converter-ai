@@ -5,6 +5,8 @@ import { ArrowUp, Check, Minus, Plus, X } from "lucide-react"; // Added ArrowUp 
 import { useState } from "react";
 import FileDownloader from "./download-button";
 import { Badge } from "@/components/ui/badge";
+// import Loader from "@/components/loader/loader";
+import { LoadingSpinner } from "@/components/loader/loader";
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
@@ -29,7 +31,8 @@ export default function FileConverterAI() {
   const [stagedFiles, setStagedFiles] = useState<string[]>([]);
   const [prompt, setPrompt] = useState("");
   const [changesAccepted, setChangesAccepted] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  
   const handleAccept = () => {
     changesAccepted || setChangesAccepted(true);
     let newFiles = stagedFiles.map(
@@ -58,6 +61,7 @@ export default function FileConverterAI() {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
       const formData = new FormData();
       files.forEach((file, index) => {
@@ -81,6 +85,8 @@ export default function FileConverterAI() {
       console.log(responseData);
     } catch (error) {
       console.error("Error submitting files and prompt:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +98,6 @@ export default function FileConverterAI() {
         multiple
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
       />
-
       <div
         className={`p-4 rounded-lg mb-6 ${
           stagedFiles.length > 0 ? "bg-red-100 dark:bg-red-950/50" : ""
@@ -194,7 +199,12 @@ export default function FileConverterAI() {
           </Button>
         </div>
       )}
-
+      {loading && (
+        <span className="flex items-center">
+          <LoadingSpinner className="w-4 h-4" />
+          <p className="text-sm text-muted-foreground ml-2">Loading</p>
+        </span>
+      )}
       <div className="flex space-x-4 mb-6">
         <Textarea
           placeholder="How can File Converter help you today?"

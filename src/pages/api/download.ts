@@ -14,6 +14,14 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const response = await utapi.getFileUrls(body);
     const urls = response.data.map(item => item.url);
+    if (urls.length === 0) {
+        return new Response(JSON.stringify({ error: 'No files were downloaded' }), {
+            status: 400,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    }
     
     // Download each file
     const downloadPromises = urls.map(async (url, index) => {

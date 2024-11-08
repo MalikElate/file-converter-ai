@@ -1,17 +1,17 @@
 # File Converter AI
 
 ## MVP features
-
-    Add loader []
+    handle all image types []
     Display file data by file type []
         File name []
         File size []
         File Demnsions []
-        Exanmple propmts
-    Download files button []
-    clear propt input [x]
-    Exanple prompts [x]
     Deployed and usable[]
+    Example propmts [x]
+    Download files button, first check if there are files to download [x]
+    clear propt input [x]
+    Add loader [x]
+    Exanple prompts [x]
 
 ## Nice to haves
 
