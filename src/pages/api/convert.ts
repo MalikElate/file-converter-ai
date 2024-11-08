@@ -134,7 +134,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         console.log("listing directory contents");
         await new Promise((resolve, reject) => {
-            exec('ls -a', (error: any, stdout: string, stderr: string) => {
+            exec('ls -a', (error: any, stdout: string, _: string) => {
                 if (error) {
                     console.error('Error listing directory:', error);
                     reject(error);
