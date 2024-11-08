@@ -26,17 +26,6 @@ export const POST: APIRoute = async ({ request }) => {
         }
     };
     await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(packageJson, null, 2));
-    
-    // Run npm install
-    // await new Promise((resolve, reject) => {
-    //     exec('npm install', (error: any) => {
-    //         if (error) {
-    //             console.error('Error installing dependencies:', error);
-    //             reject(error);
-    //         }
-    //         resolve(null);
-    //     });
-    // });
 
     // Ensure the images directory exists
     await mkdir(imagesDir, { recursive: true });
@@ -48,25 +37,28 @@ export const POST: APIRoute = async ({ request }) => {
     if (!imageFile1) {
         throw new Error('No image file provided');
     } else {
+        const extension = imageFile1.name.split('.').pop() || 'png';
         const buffer = Buffer.from(await imageFile1.arrayBuffer());
-        await writeFile(path.join(imagesDir, 'file0.png'), buffer);
+        await writeFile(path.join(imagesDir, `file0.${extension}`), buffer);
         imageFiles.push(imageFile1);
     }
     const imageFile2 = formData.get('file1') as File;
     if (imageFile2) {
+        const extension = imageFile2.name.split('.').pop() || 'png';
         const buffer = Buffer.from(await imageFile2.arrayBuffer());
-        await writeFile(path.join(imagesDir, 'file1.png'), buffer);
+        await writeFile(path.join(imagesDir, `file1.${extension}`), buffer);
         imageFiles.push(imageFile2);
     }
 
     const imageFile3 = formData.get('file2') as File;
     if (imageFile3) {
+        const extension = imageFile3.name.split('.').pop() || 'png';
         const buffer = Buffer.from(await imageFile3.arrayBuffer());
-        await writeFile(path.join(imagesDir, 'file2.png'), buffer);
+        await writeFile(path.join(imagesDir, `file2.${extension}`), buffer);
         imageFiles.push(imageFile3);
     }
     console.log(imageFiles,);
-    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.png, if there are two the files will be called file0.png and file1.png, if there are three the files will be called file0.png, file1.png, and file2.png | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
+    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created";
 
     try {
         const prompt = formData.get('prompt') as string;
@@ -187,9 +179,9 @@ export const POST: APIRoute = async ({ request }) => {
                     const filePath = path.join('/tmp', 'images', filename);
                     const fileBuffer = await readFile(filePath);
                     return new File([fileBuffer], filename, { type: "image/png" });
-                }));
+                }));``
                 
-                console.log("files", files);
+                console.log("files: _____---------------->>>>", files);
 
                 await utapi.uploadFiles(files).then((result) => {
                     console.log("result", result);
