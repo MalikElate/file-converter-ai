@@ -26,7 +26,27 @@ export const POST: APIRoute = async ({ request }) => {
     // Download each file
     const downloadPromises = urls.map(async (url, index) => {
         const response = await axios.get<Buffer>(url, { responseType: 'arraybuffer' });
-        const fileName = `image-${index}.png`;
+        
+        // Get filename from Content-Disposition header or fallback to URL
+        let fileName = `image-${index}.png`;  // default fallback
+        
+        // Try to get filename from Content-Disposition header
+        const contentDisposition = response.headers['content-disposition'];
+        if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches && matches[1]) {
+                fileName = matches[1].replace(/['"]/g, '');
+            }
+        }
+        
+        // If no filename in headers, try to get it from URL
+        if (fileName === `image-${index}.png`) {
+            const urlFileName = new URL(url).pathname.split('/').pop();
+            if (urlFileName) {
+                fileName = decodeURIComponent(urlFileName);
+            }
+        }
+
         const filePath = path.join(editedImagesDir, fileName);
         await fs.writeFile(filePath, response.data);
         return fileName;

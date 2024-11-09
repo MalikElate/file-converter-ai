@@ -1,12 +1,14 @@
 # File Converter AI
 
 ## MVP features
-    handle all image types []
+    Remove versioning []
     Display file data by file type []
         File name []
         File size []
         File Demnsions []
+    Remove staging changes 
     Deployed and usable[]
+    handle all image types [x]
     Example propmts [x]
     Download files button, first check if there are files to download [x]
     clear propt input [x]
@@ -14,7 +16,8 @@
     Exanple prompts [x]
 
 ## Nice to haves
-
+    Add plausible []
+    Track prompts, files, and results []
     Support more file types []
     Add chat []
     add posthog []
@@ -35,7 +38,6 @@
     rename to freo
 
 ## Functionality to support
-
 Convert Files []
 Archive Converter []
 Audio Converter []

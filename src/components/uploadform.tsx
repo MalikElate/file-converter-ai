@@ -33,18 +33,18 @@ export default function FileConverterAI() {
   const [changesAccepted, setChangesAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const handleAccept = () => {
-    changesAccepted || setChangesAccepted(true);
-    let newFiles = stagedFiles.map(
-      (file) => new File([file], file, { type: "image/png" })
-    );
-    setFiles(newFiles);
-    setStagedFiles([]);
-  };
+  // const handleAccept = () => {
+  //   changesAccepted || setChangesAccepted(true);
+  //   let newFiles = stagedFiles.map(
+  //     (file) => new File([file], file, { type: "image/png" })
+  //   );
+  //   setFiles(newFiles);
+  //   setStagedFiles([]);
+  // };
 
-  const handleReject = () => {
-    setStagedFiles([]);
-  };
+  // const handleReject = () => {
+  //   setStagedFiles([]);
+  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -98,17 +98,17 @@ export default function FileConverterAI() {
         multiple
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
       />
-      <div
+      {/* <div
         className={`p-4 rounded-lg mb-6 ${
           stagedFiles.length > 0 ? "bg-red-100 dark:bg-red-950/50" : ""
         }`}
-      >
-        {stagedFiles.length > 0 && (
-          <div className="flex items-center mb-2">
-            <Minus className="w-4 h-4 mr-2 text-red-600" />
-            <span className="font-semibold">Remove</span>
+      > */}
+        {/* {stagedFiles.length > 0 && files.length > 0 && ( */}
+          <div className="flex items-center mb-2 text-sm">
+            {/* <Minus className="w-4 h-4 mr-2 text-red-600" /> */}
+            <span className="font-semibold">Original File(s)</span>
           </div>
-        )}
+        {/* )} */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {files.map((file, index) => (
             <div key={index} className="group relative">
@@ -141,17 +141,17 @@ export default function FileConverterAI() {
             </div>
           ))}
         </div>
-      </div>
+      {/* </div> */}
 
-      <div
+      {/* <div
         className={`p-4 rounded-lg mb-6 ${
           stagedFiles.length > 0 ? "bg-green-100 dark:bg-green-950/50" : ""
         }`}
-      >
+      > */}
         {stagedFiles.length > 0 && (
           <div className="flex items-center mb-2">
-            <Plus className="w-4 h-4 mr-2 text-green-600" />
-            <span className="font-semibold">Keep</span>
+            {/* <Plus className="w-4 h-4 mr-2 text-green-600" /> */}
+            <span className="font-semibold text-sm">Edited File(s)</span>
           </div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -185,8 +185,9 @@ export default function FileConverterAI() {
             </div>
           ))}
         </div>
-      </div>
+      {/* </div> */}
 
+      {/* Commenting out accept/reject buttons
       {stagedFiles.length > 0 && (
         <div className="flex justify-end space-x-2">
           <Button onClick={() => handleAccept()} variant="outline">
@@ -199,6 +200,7 @@ export default function FileConverterAI() {
           </Button>
         </div>
       )}
+      */}
       {loading && (
         <span className="flex items-center">
           <LoadingSpinner className="w-4 h-4" />
