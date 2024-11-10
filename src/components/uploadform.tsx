@@ -1,26 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { FileInput } from "@/components/ui/file-input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowUp, Check, Minus, Plus, X } from "lucide-react"; // Added ArrowUp icon
+import { ArrowUp, X } from "lucide-react"; // Added ArrowUp icon
+// import { ArrowUp, Check, Minus, Plus, X } from "lucide-react"; // Added ArrowUp icon
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import FileDownloader from "./download-button";
-import { Badge } from "@/components/ui/badge";
 // import Loader from "@/components/loader/loader";
 import { LoadingSpinner } from "@/components/loader/loader";
 
 const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+const getImageDimensions = (
+  file: File
+): Promise<{ width: number; height: number; fileName: string }> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      resolve({ width: img.width, height: img.height });
+      resolve({ 
+        width: img.width, 
+        height: img.height,
+        fileName: file.name 
+      });
     };
     img.src = URL.createObjectURL(file);
   });
@@ -28,11 +35,15 @@ const getImageDimensions = (file: File): Promise<{ width: number; height: number
 
 export default function FileConverterAI() {
   const [files, setFiles] = useState<File[]>([]);
-  const [stagedFiles, setStagedFiles] = useState<string[]>([]);
+  const [stagedFiles, setStagedFiles] = useState<Array<{ key: string, filename: string }>>([]);
   const [prompt, setPrompt] = useState("");
-  const [changesAccepted, setChangesAccepted] = useState(false);
+  // const [changesAccepted, setChangesAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [imageDetails, setImageDetails] = useState<Record<string, { 
+    dimensions: string;
+    fileName: string;
+  }>>({});
+
   // const handleAccept = () => {
   //   changesAccepted || setChangesAccepted(true);
   //   let newFiles = stagedFiles.map(
@@ -56,8 +67,8 @@ export default function FileConverterAI() {
     setFiles(files.filter((file) => file !== fileToRemove));
   };
 
-  const removeStagedFile = (fileToRemove: string) => {
-    setStagedFiles(stagedFiles.filter((file) => file !== fileToRemove));
+  const removeStagedFile = (keyToRemove: string) => {
+    setStagedFiles(stagedFiles.filter(file => file.key !== keyToRemove));
   };
 
   const handleSubmit = async () => {
@@ -74,14 +85,18 @@ export default function FileConverterAI() {
         method: "POST",
         body: formData,
       });
-
+      
       if (!response.ok) {
         throw new Error(
           `Server response was not ok: ${response.status} ${response.statusText}`
         );
       }
       const responseData = await response.json();
-      setStagedFiles(responseData);
+      setStagedFiles(responseData.map((item: any) => ({
+        key: item.key,
+        filename: item.filename || 'Untitled'
+      })));
+      console.log("stagedFiles", stagedFiles);
       console.log(responseData);
     } catch (error) {
       console.error("Error submitting files and prompt:", error);
@@ -103,44 +118,46 @@ export default function FileConverterAI() {
           stagedFiles.length > 0 ? "bg-red-100 dark:bg-red-950/50" : ""
         }`}
       > */}
-        {/* {stagedFiles.length > 0 && files.length > 0 && ( */}
-          <div className="flex items-center mb-2 text-sm">
-            {/* <Minus className="w-4 h-4 mr-2 text-red-600" /> */}
-            <span className="font-semibold">Original File(s)</span>
-          </div>
-        {/* )} */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {files.map((file, index) => (
-            <div key={index} className="group relative">
-              <button
-                onClick={() => removeFile(file)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <img
-                className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-                src={changesAccepted ? `https://utfs.io/f/${file.name}` : URL.createObjectURL(file)}
-                alt={file.name}
-                onLoad={async (e) => {
-                  const img = e.target as HTMLImageElement;
-                  const dimensions = await getImageDimensions(file);
-                  const fileInfoElement = img.parentElement?.querySelector('.file-info');
-                  if (fileInfoElement) {
-                    fileInfoElement.textContent = `${dimensions.width}x${dimensions.height}`;
-                  }
-                }}
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
-                <div>{file.name}</div>
-                <div className="flex justify-between text-xs">
-                  <span>{formatFileSize(file.size)}</span>
-                  <span className="file-info" data-dimensions="Loading..."></span>
-                </div>
+      {stagedFiles.length > 0 && files.length > 0 && (
+        <div className="flex items-center mb-2 text-sm">
+          {/* <Minus className="w-4 h-4 mr-2 text-red-600" /> */}
+          <span className="font-semibold">Original File(s)</span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {files.map((file: File, index: number) => (
+          <div key={index} className="group relative">
+            <button
+              onClick={() => removeFile(file)}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img
+              className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
+              // src={changesAccepted ? `https://utfs.io/f/${file.name}` : URL.createObjectURL(file)}
+              src={URL.createObjectURL(file)}
+              alt={file.name}
+              onLoad={async (e) => {
+                const img = e.target as HTMLImageElement;
+                const dimensions = await getImageDimensions(file);
+                const fileInfoElement =
+                  img.parentElement?.querySelector(".file-info");
+                if (fileInfoElement) {
+                  fileInfoElement.textContent = `${dimensions.width}x${dimensions.height}`;
+                }
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
+              <div>{file.name}</div>
+              <div className="flex justify-between text-xs">
+                <span>{formatFileSize(file.size)}</span>
+                <span className="file-info" data-dimensions="Loading..."></span>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       {/* </div> */}
 
       {/* <div
@@ -148,43 +165,47 @@ export default function FileConverterAI() {
           stagedFiles.length > 0 ? "bg-green-100 dark:bg-green-950/50" : ""
         }`}
       > */}
-        {stagedFiles.length > 0 && (
-          <div className="flex items-center mb-2">
-            {/* <Plus className="w-4 h-4 mr-2 text-green-600" /> */}
-            <span className="font-semibold text-sm">Edited File(s)</span>
-          </div>
-        )}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {stagedFiles.map((file, index) => (
-            <div key={index} className="group relative">
-              <button
-                onClick={() => removeStagedFile(file)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <img
-                className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-                src={`https://utfs.io/f/${file}`}
-                alt={file}
-                onLoad={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  const fileInfoElement = img.parentElement?.querySelector('.file-info');
-                  if (fileInfoElement) {
-                    fileInfoElement.textContent = `${img.naturalWidth}x${img.naturalHeight}`;
+      {stagedFiles.length > 0 && (
+        <div className="flex items-center mb-2">
+          {/* <Plus className="w-4 h-4 mr-2 text-green-600" /> */}
+          <span className="font-semibold text-sm">Edited File(s)</span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {stagedFiles.map((file: { key: string, filename: string }, index: number) => (
+          <div key={index} className="group relative">
+            <button
+              onClick={() => removeStagedFile(file.key)}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img
+              className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
+              src={`https://utfs.io/f/${file.key}`}
+              alt={file.filename}
+              onLoad={(e) => {
+                const img = e.target as HTMLImageElement;
+                
+                setImageDetails(prev => ({
+                  ...prev,
+                  [file.key]: {
+                    dimensions: `${img.naturalWidth}x${img.naturalHeight}`,
+                    fileName: file.filename
                   }
-                }}
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
-                <div>Name coming soon</div>
-                <div className="flex justify-between text-xs">
-                  <span data-filesize="Loading..."></span>
-                  <span data-dimensions="Loading..."></span>
-                </div>
+                }));
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
+              <div>{imageDetails[file.key]?.fileName || 'Loading...'}</div>
+              <div className="flex justify-between text-xs">
+                <span data-filesize="Loading..."></span>
+                <span>{imageDetails[file.key]?.dimensions || 'Loading...'}</span>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       {/* </div> */}
 
       {/* Commenting out accept/reject buttons
@@ -253,7 +274,7 @@ export default function FileConverterAI() {
           Compress image(s)
         </Badge>
       </div>
-      <FileDownloader fileKeys={stagedFiles} />
+      <FileDownloader fileKeys={stagedFiles.map((file: { key: string }) => file.key)} />
     </div>
   );
 }

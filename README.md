@@ -1,13 +1,12 @@
 # File Converter AI
 
 ## MVP features
-    Remove versioning []
+    Deployed and usable[]
     Display file data by file type []
         File name []
         File size []
         File Demnsions []
-    Remove staging changes 
-    Deployed and usable[]
+    Remove versioning [x]
     handle all image types [x]
     Example propmts [x]
     Download files button, first check if there are files to download [x]

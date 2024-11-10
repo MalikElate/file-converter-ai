@@ -16,6 +16,29 @@ const anthropic = new Anthropic({
 
 export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join('/tmp', 'images');
+    
+    console.log("Cleaning up previous images...");
+    try {
+        await new Promise((resolve, _) => {
+            exec(
+                `rm -rf ${imagesDir}`,
+                (error: any, _: string, stderr: string) => {
+                    if (error) {
+                        console.warn('Warning: Could not clean up images directory:', stderr);
+                    }
+                    console.log('Images cleanup completed');
+                    resolve(null);
+                }
+            );
+        });
+        
+        // Recreate the images directory
+        await mkdir(imagesDir, { recursive: true });
+    } catch (error) {
+        console.warn('Warning: Error during cleanup/setup:', error);
+        // Continue execution as the next steps will attempt to create the directory anyway
+    }
+
     const tmpDir = '/tmp';
 
     // Add package.json and install sharp
@@ -57,7 +80,8 @@ export const POST: APIRoute = async ({ request }) => {
         await writeFile(path.join(imagesDir, `file2.${extension}`), buffer);
         imageFiles.push(imageFile3);
     }
-    console.log(imageFiles,);
+
+    console.log("imageFiles", imageFiles);
     const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file";
 
     try {
@@ -82,10 +106,10 @@ export const POST: APIRoute = async ({ request }) => {
                 }
             ]
         });
-
+        
         // Create a unique filename for the worker
-        const workerFileName = `worker.${uuidv4()}.js`;
         const workersDir = path.join('/tmp', 'workers');
+        const workerFileName = `worker.${uuidv4()}.js`;
         const workerFilePath = path.join(workersDir, workerFileName);
 
         // Create workers directory and package.json
@@ -99,7 +123,7 @@ export const POST: APIRoute = async ({ request }) => {
         };
         await writeFile(path.join(workersDir, 'package.json'), JSON.stringify(workerPackageJson, null, 2));
 
-        // Run npm install with specific flags for restricted environments
+
         console.log("Installing worker dependencies...");
         await new Promise((resolve, reject) => {
             exec(
@@ -168,40 +192,43 @@ export const POST: APIRoute = async ({ request }) => {
         }
 
         return new Promise((resolve, reject) => {
-            
+
             const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
 
             worker.on('message', async (message) => {
                 console.log('Message from worker:', message);
-                
-                // Read the files from the tmp/images directory instead of project images directory
-                const files = await Promise.all(message.map(async (filename: string) => {
-                    const filePath = path.join('/tmp', 'images', filename);
-                    const fileBuffer = await readFile(filePath);
-                    return new File([fileBuffer], filename, { type: "image/png" });
-                }));``
-                
-                console.log("files: _____---------------->>>>", files);
 
-                await utapi.uploadFiles(files).then((result) => {
+                try {
+                    const files = await Promise.all(message.map(async (filename: string) => {
+                        const filePath = path.join('/tmp', 'images', filename);
+                        const fileBuffer = await readFile(filePath);
+                        return new File([fileBuffer], filename, { type: "image/png" });
+                    }));
+
+                    console.log("files: _____---------------->>>>", files);
+
+                    const result = await utapi.uploadFiles(files);
                     console.log("result", result);
-                    const fileKeys = result.map(item => item.data?.key);
-                    console.log("fileKeys", fileKeys);
-                    resolve(new Response(JSON.stringify(fileKeys), {
+                    const fileKeysAndFilenames = result.map(item => ({ 
+                        key: item.data?.key, 
+                        filename: item.data?.name 
+                    }));
+                    console.log("fileKeysAndFilenames", fileKeysAndFilenames);
+                    
+                    resolve(new Response(JSON.stringify(fileKeysAndFilenames), {
                         status: 200,
                         headers: {
                             'Content-Type': 'application/json'
                         }
-                    }));    
-                });
-                //TODO: get the files from the message, upload them to UT via server side upload, on onUploadComplete return all the keys to the client in an object 
-                
-                resolve(new Response(JSON.stringify(message), {
-                    status: 200,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }));    
+                    }));
+                } catch (error) {
+                    reject(new Response(JSON.stringify({ error: 'Upload failed' }), {
+                        status: 500,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }));
+                }
             });
 
             worker.on('error', (error) => {
