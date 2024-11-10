@@ -1,11 +1,47 @@
 # File Converter AI
 
+
+
+nlp interfaces []
+chat converter []
+copilot for image editing []
+\
+
+weihghts and biases 
+structured output anthropic api
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## MVP features
-    Deployed and usable[]
-    Display file data by file type []
-        File name []
-        File size []
-        File Demnsions []
+    Deployed and usable[x]
+    Display file data by file type [x]
+        File name [x]
+        File size [x]
+        File Demnsions [x]
     Remove versioning [x]
     handle all image types [x]
     Example propmts [x]
