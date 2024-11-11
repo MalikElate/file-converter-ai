@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk";
 import type { APIRoute } from 'astro';
 import { exec } from 'child_process';
 import * as dotenv from 'dotenv';
@@ -7,15 +6,22 @@ import * as path from 'path';
 import { utapi } from "src/server/uploadthing.ts";
 import { v4 as uuidv4 } from 'uuid';
 import { Worker } from 'worker_threads';
+import OpenAI from "openai";
 
 dotenv.config();
 
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join('/tmp', 'images');
+    const openai = new OpenAI();
+
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+            {"role": "user", "content": "write a haiku about ai"}
+        ]
+    });
+
+    console.log("completion", completion);
 
     console.log("Cleaning up previous images...");
     try {
@@ -96,22 +102,27 @@ export const POST: APIRoute = async ({ request }) => {
         access them by declaring them like this: const imagePath1 = path.join('/tmp/images', 'file0.png');
         `;
 
-        // Send prompt to Anthropic
-        const msg = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: 1000,
-            temperature: 0,
-            system: systemPrompt,
+        const msg = await openai.chat.completions.create({
+            model: "gpt-4o",
             messages: [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": fixedPrompt
-                        }
-                    ]
-                }
+              {
+                "role": "system",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": systemPrompt
+                  }
+                ]
+              },
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": fixedPrompt
+                  }
+                ]
+              }
             ]
         });
 
@@ -168,7 +179,8 @@ export const POST: APIRoute = async ({ request }) => {
             });
         });
 
-        const content = msg.content[0];
+        const content = msg.choices[0].message.content;
+
         let imagePath1: any;
         let imagePath2: any;
         let imagePath3: any;
@@ -185,12 +197,12 @@ export const POST: APIRoute = async ({ request }) => {
         await mkdir(workersDir, { recursive: true });
 
         // Write the worker file
-        if ('text' in content) {
+        if (typeof content === 'string') {
             const workerContentTemp = `
             // const imagePath1 = '${imagePath1}';
             // const imagePath2 = '${imagePath2}';
             // const imagePath3 = '${imagePath3}';
-            ${content.text}
+            ${content}
         `;
             const workerContent = workerContentTemp
             await writeFile(workerFilePath, workerContent);
