@@ -16,7 +16,7 @@ const anthropic = new Anthropic({
 
 export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join('/tmp', 'images');
-    
+
     console.log("Cleaning up previous images...");
     try {
         await new Promise((resolve, _) => {
@@ -31,7 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
                 }
             );
         });
-        
+
         // Recreate the images directory
         await mkdir(imagesDir, { recursive: true });
     } catch (error) {
@@ -56,6 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 
     let imageFiles: File[] = [];
+    let fileNames: string[] = [];
     const imageFile1 = formData.get('file0') as File;
     if (!imageFile1) {
         throw new Error('No image file provided');
@@ -64,6 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
         const buffer = Buffer.from(await imageFile1.arrayBuffer());
         await writeFile(path.join(imagesDir, `file0.${extension}`), buffer);
         imageFiles.push(imageFile1);
+        fileNames.push(`file0.${extension}`);
     }
     const imageFile2 = formData.get('file1') as File;
     if (imageFile2) {
@@ -71,6 +73,7 @@ export const POST: APIRoute = async ({ request }) => {
         const buffer = Buffer.from(await imageFile2.arrayBuffer());
         await writeFile(path.join(imagesDir, `file1.${extension}`), buffer);
         imageFiles.push(imageFile2);
+        fileNames.push(`file1.${extension}`);
     }
 
     const imageFile3 = formData.get('file2') as File;
@@ -79,14 +82,19 @@ export const POST: APIRoute = async ({ request }) => {
         const buffer = Buffer.from(await imageFile3.arrayBuffer());
         await writeFile(path.join(imagesDir, `file2.${extension}`), buffer);
         imageFiles.push(imageFile3);
+        fileNames.push(`file2.${extension}`);
     }
 
     console.log("imageFiles", imageFiles);
-    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file";
+    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | when responding with file names, only include the file name, not the path. for example return 'resized_100x100.png' and not '/tmp/images/resized_100x100.png'  | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file | do not import path twice";
 
     try {
         const prompt = formData.get('prompt') as string;
         console.log('Prompt:', prompt);
+
+        const fixedPrompt = `${prompt} \n your input files are located at /tmp/images the file names are ${fileNames.join(', ')}
+        access them by declaring them like this: const imagePath1 = path.join('/tmp/images', 'file0.png');
+        `;
 
         // Send prompt to Anthropic
         const msg = await anthropic.messages.create({
@@ -100,13 +108,13 @@ export const POST: APIRoute = async ({ request }) => {
                     "content": [
                         {
                             "type": "text",
-                            "text": prompt
+                            "text": fixedPrompt
                         }
                     ]
                 }
             ]
         });
-        
+
         // Create a unique filename for the worker
         const workersDir = path.join('/tmp', 'workers');
         const workerFileName = `worker.${uuidv4()}.js`;
@@ -179,9 +187,9 @@ export const POST: APIRoute = async ({ request }) => {
         // Write the worker file
         if ('text' in content) {
             const workerContentTemp = `
-            const imagePath1 = '${imagePath1}';
-            const imagePath2 = '${imagePath2}';
-            const imagePath3 = '${imagePath3}';
+            // const imagePath1 = '${imagePath1}';
+            // const imagePath2 = '${imagePath2}';
+            // const imagePath3 = '${imagePath3}';
             ${content.text}
         `;
             const workerContent = workerContentTemp
@@ -199,22 +207,42 @@ export const POST: APIRoute = async ({ request }) => {
                 console.log('Message from worker:', message);
 
                 try {
+                    if (!Array.isArray(message)) {
+                        throw new Error('Worker message must be an array of filenames');
+                    }
+
                     const files = await Promise.all(message.map(async (filename: string) => {
                         const filePath = path.join('/tmp', 'images', filename);
-                        const fileBuffer = await readFile(filePath);
-                        return new File([fileBuffer], filename, { type: "image/png" });
+                        try {
+                            const fileBuffer = await readFile(filePath);
+                            return new File([fileBuffer], filename, { type: "image/png" });
+                        } catch (err: unknown) {
+                            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                            throw new Error(`Failed to read file ${filename}: ${errorMessage}`);
+                        }
                     }));
 
-                    console.log("files: _____---------------->>>>", files);
+                    console.log("Processing files:", files);
+
+                    if (!files.length) {
+                        throw new Error('No files were processed');
+                    }
 
                     const result = await utapi.uploadFiles(files);
-                    console.log("result", result);
-                    const fileKeysAndFilenames = result.map(item => ({ 
-                        key: item.data?.key, 
-                        filename: item.data?.name 
-                    }));
-                    console.log("fileKeysAndFilenames", fileKeysAndFilenames);
-                    
+                    if (!result) {
+                        throw new Error('Upload failed - no result returned');
+                    }
+
+                    const fileKeysAndFilenames = result.map(item => {
+                        if (!item.data?.key || !item.data?.name) {
+                            throw new Error(`Invalid upload result: ${JSON.stringify(item)}`);
+                        }
+                        return {
+                            key: item.data.key,
+                            filename: item.data.name
+                        };
+                    });
+
                     resolve(new Response(JSON.stringify(fileKeysAndFilenames), {
                         status: 200,
                         headers: {
@@ -222,7 +250,11 @@ export const POST: APIRoute = async ({ request }) => {
                         }
                     }));
                 } catch (error) {
-                    reject(new Response(JSON.stringify({ error: 'Upload failed' }), {
+                    console.error('Error processing worker message:', error);
+                    reject(new Response(JSON.stringify({
+                        error: error instanceof Error ? error.message : 'Unknown error occurred',
+                        details: error instanceof Error ? error.stack : undefined
+                    }), {
                         status: 500,
                         headers: {
                             'Content-Type': 'application/json'
