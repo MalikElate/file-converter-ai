@@ -1,41 +1,5 @@
 # File Converter AI
 
-
-
-nlp interfaces []
-chat converter []
-copilot for image editing []
-\
-
-weihghts and biases 
-structured output anthropic api
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## MVP features
     Deployed and usable[x]
     Display file data by file type [x]
@@ -71,6 +35,10 @@ structured output anthropic api
     send prompt and files to the server [x]
     have the server write a worker.uuid.js file [x]
     rename to freo
+
+## Notes
+weihghts and biases 
+structured output anthropic api
 
 ## Functionality to support
 Convert Files []

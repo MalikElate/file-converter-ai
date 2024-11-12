@@ -16,6 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const completion = await openai.chat.completions.create({
         model: "gpt-4o",
+        store: true,
         messages: [
             {"role": "user", "content": "write a haiku about ai"}
         ]
