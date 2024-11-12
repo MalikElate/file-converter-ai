@@ -230,7 +230,7 @@ export default function FileConverterAI() {
       )}
       <div className="flex space-x-4 mb-6">
         <Textarea
-          placeholder="How can File Converter help you today?"
+          placeholder="How can I help?"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           className="flex-grow h-10 min-h-[40px] resize-none py-1.5 transition-height duration-200"
@@ -254,24 +254,34 @@ export default function FileConverterAI() {
           <ArrowUp className="w-4 h-4" />
         </Button>
       </div>
-      <div className="flex gap-2 ">
+      <div className="flex flex-wrap gap-2">
         <Badge
+          className="cursor-pointer hover:bg-accent"
           variant="outline"
           onClick={() => setPrompt("Create a 100px by 100px copy")}
         >
-          Create a 100px by 100px copy
-        </Badge>
-        <Badge variant="outline" onClick={() => setPrompt("Convert to PNG")}>
-          Convert to PNG
+          100px Square
         </Badge>
         <Badge
+          className="cursor-pointer hover:bg-accent"
+          variant="outline"
+          onClick={() => setPrompt("Convert to PNG")}
+        >
+          PNG
+        </Badge>
+        <Badge
+          className="cursor-pointer hover:bg-accent"
           variant="outline"
           onClick={() => setPrompt("Resize to 200px by 200px")}
         >
-          Resize to 200px by 200px
+          200px Square
         </Badge>
-        <Badge variant="outline" onClick={() => setPrompt("Compress image")}>
-          Compress image(s)
+        <Badge
+          className="cursor-pointer hover:bg-accent"
+          variant="outline"
+          onClick={() => setPrompt("Compress image")}
+        >
+          Compress
         </Badge>
       </div>
       <FileDownloader fileKeys={stagedFiles.map((file: { key: string }) => file.key)} />
