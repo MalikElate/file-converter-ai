@@ -14,16 +14,6 @@ export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join('/tmp', 'images');
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        store: true,
-        messages: [
-            {"role": "user", "content": "write a haiku about ai"}
-        ]
-    });
-
-    console.log("completion", completion);
-
     console.log("Cleaning up previous images...");
     try {
         await new Promise((resolve, _) => {
@@ -105,6 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         const msg = await openai.chat.completions.create({
             model: "gpt-4o",
+            store: true,
             messages: [
               {
                 "role": "system",
