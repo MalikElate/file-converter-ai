@@ -27,6 +27,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.1",
     "@uploadthing/react": "^7.0.2",
+    "@vercel/analytics": "^1.4.0",
     "astro": "^4.16.7",
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
