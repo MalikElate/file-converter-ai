@@ -7,12 +7,15 @@ import { utapi } from "src/server/uploadthing.ts";
 import { v4 as uuidv4 } from 'uuid';
 import { Worker } from 'worker_threads';
 import OpenAI from "openai";
+// import * as weave from 'weave'  
 
 dotenv.config();
 
 export const POST: APIRoute = async ({ request }) => {
     const imagesDir = path.join('/tmp', 'images');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = // weave.wrapOpenAI(
+        new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    // );
 
     console.log("Cleaning up previous images...");
     try {
@@ -83,7 +86,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     console.log("imageFiles", imageFiles);
-    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | when responding with file names, only include the file name, not the path. for example return 'resized_100x100.png' and not '/tmp/images/resized_100x100.png'  | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file | do not import path twice";
+    const systemPrompt = "Given the input return a node js script | use ES module imports (import syntax) instead of require | for image resizing use the sharp library | that can do the photo editing work described by the user | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do not include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | Do not wrap your responses in backticks | there are up to 3 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension], if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | when responding with file names, only include the file name, not the path. for example return 'resized_100x100.png' and not '/tmp/images/resized_100x100.png'  | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file | do not import path twice | save your edited images to the /tmp/images directory using const outputDir = '/tmp/images'; ";
 
     try {
         const prompt = formData.get('prompt') as string;

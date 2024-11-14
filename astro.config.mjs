@@ -3,9 +3,11 @@ import tailwind from "@astrojs/tailwind";
 import { defineConfig } from "astro/config";
 import clerk from '@clerk/astro';
 import vercel from '@astrojs/vercel/serverless';
+import partytown from '@astrojs/partytown'
 
 export default defineConfig({
   output: 'server',
+  site: 'https://astro-article.netlify.app/',
   adapter: vercel({
     analytics: true,
     maxDuration: 60,
@@ -15,7 +17,12 @@ export default defineConfig({
     tailwind({
       applyBaseStyles: false,
     }),
-    clerk()
+    clerk(), 
+    partytown({
+        config: {
+          forward: ["dataLayer.push"],
+        },
+    }),
   ],
   build: {
     minify: true,
