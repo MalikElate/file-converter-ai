@@ -44,7 +44,10 @@ export default function FileDownloader({ fileKeys }: FileDownloaderProps) {
   };
 
   return (
-    <Button onClick={downloadAllFiles} disabled={isDownloading}>
+    <Button 
+      onClick={downloadAllFiles} 
+      disabled={isDownloading || fileKeys.length === 0}
+    >
       <Download className="w-4 h-4 mr-2" />
       {isDownloading ? "Downloading..." : "Download All Files"}
     </Button>

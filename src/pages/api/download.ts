@@ -71,4 +71,4 @@ export const POST: APIRoute = async ({ request }) => {
             'Content-Disposition': 'attachment; filename="edited-images.zip"'
         }
     });
-};
+};  
