@@ -1,33 +1,49 @@
+
 # File Converter AI
 
 ## Version 0.2 
-    Set up domain []
-    post on reddit []
-    namecheap domain verification []
+    promote on reddit []
+    set up paid tier []
+        check if the users has credits if yes remove banner and allow submissions [x]
+        block usage based on localstorage [x]
+        allow users to sign up and buy credits [x]
+            set up lemon squeezy credits page [x]
+        allow users to sign up for the paid tier subscription [x]
+            set up lemon squeezy subscription [x]
+        pricing thesis [x]
+        update the pricing page [x]
+    namecheap domain verification [x]
+    Set up domain [x]
+    Add instructions [x]
 
 # Version 0.3 
+    prevent submission without a prompt []
     gracfully handle no file error []
-    fix the prompt input []
+
 
 ## Nice to haves
-    Track prompts, files, and results []
+    Track prompts, files, and results [] 
+    set a min width for images 
     Support more file types []
     Add chat []
     have any errors displayed on screen []
     update clerk app name and key []
     clean up pricing page []
         add credits [] .
-    add arrow to footer "email me when stuff breaks" please i'm lonely []
     edit image does not check to see if there are any availble images to download []
     remove logging in prod []
+    offer an api []
 
+    make download all files disabled unless there are files to download [x]
     add posthog [x]
     upload files to uploadThing [x]
     add a download file button [x]
     execute the code against the uploaded files images [x]
     send prompt and files to the server [x]
     have the server write a worker.uuid.js file [x]
-    rename to freo
+    discount to pay with crypto[x]
+    blog []
+        https://www.batchphoto.com/blog/
 
 ## Notes
     weihghts and biases 
@@ -74,4 +90,7 @@
     Merge Files []
     Merge PDF []
 
-## PRICING THESIS
+## PRICING THESIS   
+    $5 credits 
+        50 conversions []
+    $20 per month for unlimted 
