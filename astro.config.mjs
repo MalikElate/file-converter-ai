@@ -1,8 +1,8 @@
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import { defineConfig } from "astro/config";
-// import clerk from "@clerk/astro";
-// import vercel from "@astrojs/vercel/serverless";
+import clerk from "@clerk/astro";
+import vercel from "@astrojs/vercel/serverless";
 import partytown from "@astrojs/partytown";
 
 import db from "@astrojs/db";
