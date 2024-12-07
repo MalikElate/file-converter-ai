@@ -1,28 +1,28 @@
 ---
 import ThemeIcon from "@/components/ui/ThemeIcon.astro";
 import { version } from "../../package.json";
-import {
-  SignedIn,
-  SignedOut,
-  UserButton,
-  SignInButton,
-} from "@clerk/astro/components";
+// import {
+//   SignedIn,
+//   SignedOut,
+//   UserButton,
+//   SignInButton,
+// } from "@clerk/astro/components";
 ---
 
 <nav>
   <div class="flex justify-between p-[15px]">
     <a href="/" class="font-bold text-xl">File Converter AI <span class="text-lg text-gray-500">Beta v{version}</span></a>
     <div class="flex gap-4">
-      <a href="/pricing" class="font-bold">Pricing</a>
+      <!-- <a href="/pricing" class="font-bold">Pricing</a> -->
       <a href="/blog" class="font-bold">Blog</a>
-      <SignedIn>
+      <!-- <SignedIn>
         <UserButton />
       </SignedIn>
       <SignedOut>
         <a class="font-bold">
           <SignInButton mode="modal" class="font-bold">Sign in</SignInButton>
-        </a>
-      </SignedOut>
+        </a> -->
+      <!-- </SignedOut> -->
       <ThemeIcon />
     </div>
   </div>
