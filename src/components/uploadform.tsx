@@ -3,12 +3,17 @@ import { FileInput } from "@/components/ui/file-input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, X } from "lucide-react"; // Added ArrowUp icon
 // import { ArrowUp, Check, Minus, Plus, X } from "lucide-react"; // Added ArrowUp icon
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { Terminal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import FileDownloader from "./download-button";
 // import Loader from "@/components/loader/loader";
 import { LoadingSpinner } from "@/components/loader/loader";
+import HowToCollapsible from "./HowToCollapsible";
+import { cx } from "class-variance-authority";
 
+// Move formatFileSize outside the component
 const formatFileSize = (bytes: number) => {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
@@ -17,16 +22,15 @@ const formatFileSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-const getImageDimensions = (
-  file: File
-): Promise<{ width: number; height: number; fileName: string }> => {
+// Move getImageDimensions outside the component as well
+const getImageDimensions = (file: File): Promise<{ width: number; height: number; fileName: string }> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      resolve({ 
-        width: img.width, 
+      resolve({
+        width: img.width,
         height: img.height,
-        fileName: file.name 
+        fileName: file.name,
       });
     };
     img.src = URL.createObjectURL(file);
@@ -34,28 +38,51 @@ const getImageDimensions = (
 };
 
 export default function FileConverterAI() {
+  // All hooks at the top level
   const [files, setFiles] = useState<File[]>([]);
-  const [stagedFiles, setStagedFiles] = useState<Array<{ key: string, filename: string }>>([]);
+  const [stagedFiles, setStagedFiles] = useState<Array<{ key: string; filename: string }>>([]);
   const [prompt, setPrompt] = useState("");
-  // const [changesAccepted, setChangesAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [imageDetails, setImageDetails] = useState<Record<string, { 
-    dimensions: string;
-    fileName: string;
-  }>>({});
+  const [imageDetails, setImageDetails] = useState<Record<string, { dimensions: string; fileName: string }>>({});
+  const [conversionCount, setConversionCount] = useState<number>(0);
+  const [showAlert, setShowAlert] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // const handleAccept = () => {
-  //   changesAccepted || setChangesAccepted(true);
-  //   let newFiles = stagedFiles.map(
-  //     (file) => new File([file], file, { type: "image/png" })
-  //   );
-  //   setFiles(newFiles);
-  //   setStagedFiles([]);
-  // };
+  // Add useEffect to initialize conversion count from localStorage
+  useEffect(() => {
+    const storedCount = localStorage.getItem("conversionCount");
+    // Initialize count to 0 if not found
+    const count = storedCount ? parseInt(storedCount) : 0;
 
-  // const handleReject = () => {
-  //   setStagedFiles([]);
-  // };
+    setConversionCount(count);
+    setShowAlert(count >= 5);
+
+    // Initialize localStorage if not set
+    if (!storedCount) {
+      localStorage.setItem("conversionCount", "0");
+    }
+  }, []);
+
+  // Add useEffect for initial height adjustment
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, []);
+
+  // Add height adjustment function
+  const adjustHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
+    }
+  };
+
+  // Modify the textarea onChange handler
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPrompt(e.target.value);
+    adjustHeight();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -68,10 +95,16 @@ export default function FileConverterAI() {
   };
 
   const removeStagedFile = (keyToRemove: string) => {
-    setStagedFiles(stagedFiles.filter(file => file.key !== keyToRemove));
+    setStagedFiles(stagedFiles.filter((file) => file.key !== keyToRemove));
   };
 
   const handleSubmit = async () => {
+    // Check conversion count before proceeding
+    if (conversionCount >= 5) {
+      setShowAlert(true);
+      return;
+    }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -85,42 +118,54 @@ export default function FileConverterAI() {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error(
           `Server response was not ok: ${response.status} ${response.statusText}`
         );
       }
       const responseData = await response.json();
-      setStagedFiles(responseData.map((item: any) => ({
-        key: item.key,
-        filename: item.filename || 'Untitled'
-      })));
+      setStagedFiles(
+        responseData.map((item: any) => ({
+          key: item.key,
+          filename: item.filename || "Untitled",
+        }))
+      );
       console.log("stagedFiles", stagedFiles);
       console.log(responseData);
+
+    
     } catch (error) {
       console.error("Error submitting files and prompt:", error);
     } finally {
       setLoading(false);
+      // Increment conversion count
+      const newCount = conversionCount + 1;
+      setConversionCount(newCount);
+      localStorage.setItem("conversionCount", newCount.toString());
     }
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl space-y-4">
+    <div className="container mx-auto p-4 max-w-6xl space-y-4">
+      {showAlert && (
+        <Alert variant="destructive" className="mb-4">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Heads up!</AlertTitle>
+          You have reached the maximum number of free conversions. Please
+          purchase credits or sign up for the pro plan to continue using the
+          app.
+        </Alert>
+      )}
+      <HowToCollapsible />
       <FileInput
         type="file"
         onChange={handleFileChange}
         multiple
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
       />
-      {/* <div
-        className={`p-4 rounded-lg mb-6 ${
-          stagedFiles.length > 0 ? "bg-red-100 dark:bg-red-950/50" : ""
-        }`}
-      > */}
       {stagedFiles.length > 0 && files.length > 0 && (
         <div className="flex items-center mb-2 text-sm">
-          {/* <Minus className="w-4 h-4 mr-2 text-red-600" /> */}
           <span className="font-semibold">Original File(s)</span>
         </div>
       )}
@@ -135,7 +180,6 @@ export default function FileConverterAI() {
             </button>
             <img
               className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-              // src={changesAccepted ? `https://utfs.io/f/${file.name}` : URL.createObjectURL(file)}
               src={URL.createObjectURL(file)}
               alt={file.name}
               onLoad={async (e) => {
@@ -158,70 +202,50 @@ export default function FileConverterAI() {
           </div>
         ))}
       </div>
-      {/* </div> */}
-
-      {/* <div
-        className={`p-4 rounded-lg mb-6 ${
-          stagedFiles.length > 0 ? "bg-green-100 dark:bg-green-950/50" : ""
-        }`}
-      > */}
       {stagedFiles.length > 0 && (
         <div className="flex items-center mb-2">
-          {/* <Plus className="w-4 h-4 mr-2 text-green-600" /> */}
           <span className="font-semibold text-sm">Edited File(s)</span>
         </div>
       )}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {stagedFiles.map((file: { key: string, filename: string }, index: number) => (
-          <div key={index} className="group relative">
-            <button
-              onClick={() => removeStagedFile(file.key)}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <img
-              className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
-              src={`https://utfs.io/f/${file.key}`}
-              alt={file.filename}
-              onLoad={(e) => {
-                const img = e.target as HTMLImageElement;
-                
-                setImageDetails(prev => ({
-                  ...prev,
-                  [file.key]: {
-                    dimensions: `${img.naturalWidth}x${img.naturalHeight}`,
-                    fileName: file.filename
-                  }
-                }));
-              }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
-              <div>{imageDetails[file.key]?.fileName || 'Loading...'}</div>
-              <div className="flex justify-between text-xs">
-                <span data-filesize="Loading..."></span>
-                <span>{imageDetails[file.key]?.dimensions || 'Loading...'}</span>
+        {stagedFiles.map(
+          (file: { key: string; filename: string }, index: number) => (
+            <div key={index} className="group relative">
+              <button
+                onClick={() => removeStagedFile(file.key)}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <img
+                className="aspect-square bg-gray-200 rounded flex items-center justify-center text-sm"
+                src={`https://utfs.io/f/${file.key}`}
+                alt={file.filename}
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
+
+                  setImageDetails((prev) => ({
+                    ...prev,
+                    [file.key]: {
+                      dimensions: `${img.naturalWidth}x${img.naturalHeight}`,
+                      fileName: file.filename,
+                    },
+                  }));
+                }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm space-y-1">
+                <div>{imageDetails[file.key]?.fileName || "Loading..."}</div>
+                <div className="flex justify-between text-xs">
+                  <span data-filesize="Loading..."></span>
+                  <span>
+                    {imageDetails[file.key]?.dimensions || "Loading..."}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
-      {/* </div> */}
-
-      {/* Commenting out accept/reject buttons
-      {stagedFiles.length > 0 && (
-        <div className="flex justify-end space-x-2">
-          <Button onClick={() => handleAccept()} variant="outline">
-            <Check className="w-4 h-4 mr-2" />
-            Accept All Changes
-          </Button>
-          <Button onClick={() => handleReject()} variant="outline">
-            <X className="w-4 h-4 mr-2" />
-            Reject All Changes
-          </Button>
-        </div>
-      )}
-      */}
       {loading && (
         <span className="flex items-center">
           <LoadingSpinner className="w-4 h-4" />
@@ -230,21 +254,19 @@ export default function FileConverterAI() {
       )}
       <div className="flex space-x-4 mb-6">
         <Textarea
+          ref={textareaRef}
           placeholder="How can I help?"
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          className="flex-grow h-10 min-h-[40px] resize-none py-1.5 transition-height duration-200"
-          style={{ height: "40px" }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              if (e.shiftKey) {
-                // Allow new lines with Shift+Enter
-                e.currentTarget.style.height = "auto";
-                e.currentTarget.style.height =
-                  e.currentTarget.scrollHeight + "px";
-              } else {
-                // Prevent default to avoid new line
-                e.preventDefault();
+          onChange={handlePromptChange}
+          className={cx(
+            "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-xl text-base bg-muted",
+          )}
+          rows={3}
+          autoFocus
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              if (!loading) {
                 handleSubmit();
               }
             }
@@ -284,7 +306,9 @@ export default function FileConverterAI() {
           Compress
         </Badge>
       </div>
-      <FileDownloader fileKeys={stagedFiles.map((file: { key: string }) => file.key)} />
+      <FileDownloader
+        fileKeys={stagedFiles.map((file: { key: string }) => file.key)}
+      />
     </div>
   );
 }
