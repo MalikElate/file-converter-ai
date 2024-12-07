@@ -1,7 +1,7 @@
 {
   "name": "astro-rft",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "astro dev",
     "dev-network": "astro dev --host",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.3",
+    "@astrojs/db": "^0.14.0-beta.2",
     "@astrojs/partytown": "^2.1.2",
     "@astrojs/react": "^3.6.2",
     "@astrojs/tailwind": "^5.1.1",
@@ -21,6 +22,7 @@
     "@clerk/clerk-react": "^5.11.0",
     "@lemonsqueezy/lemonsqueezy.js": "^3.3.1",
     "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-progress": "^1.1.0",
@@ -29,7 +31,7 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@uploadthing/react": "^7.0.2",
     "@vercel/analytics": "^1.4.0",
-    "astro": "^4.16.7",
+    "astro": "^4.16.13",
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
