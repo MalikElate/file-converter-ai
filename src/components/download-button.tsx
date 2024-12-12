@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react"; // Added ArrowUp icon
+import { Download } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface FileDownloaderProps {
   fileKeys: string[];
@@ -10,6 +11,13 @@ export default function FileDownloader({ fileKeys }: FileDownloaderProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadAllFiles = async () => {
+    if (fileKeys.length === 0) {
+      toast.error("No converted files available to download", {
+        description: "Please convert some files first"
+      });
+      return;
+    }
+
     setIsDownloading(true);
 
     try {
@@ -37,7 +45,9 @@ export default function FileDownloader({ fileKeys }: FileDownloaderProps) {
       a.remove();
     } catch (error) {
       console.error('Download error:', error);
-      alert(error instanceof Error ? error.message : "Error downloading files. Please try again later.");
+      toast.error("Error downloading files", {
+        description: error instanceof Error ? error.message : "Please try again later"
+      });
     } finally {
       setIsDownloading(false);
     }
@@ -46,7 +56,7 @@ export default function FileDownloader({ fileKeys }: FileDownloaderProps) {
   return (
     <Button 
       onClick={downloadAllFiles} 
-      disabled={isDownloading || fileKeys.length === 0}
+      disabled={isDownloading}
     >
       <Download className="w-4 h-4 mr-2" />
       {isDownloading ? "Downloading..." : "Download All Files"}

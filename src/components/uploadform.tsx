@@ -12,6 +12,7 @@ import FileDownloader from "./download-button";
 import { LoadingSpinner } from "@/components/loader/loader";
 import HowToCollapsible from "./HowToCollapsible";
 import { cx } from "class-variance-authority";
+import { toast } from "sonner";
 
 // Move formatFileSize outside the component
 const formatFileSize = (bytes: number) => {
@@ -99,7 +100,20 @@ export default function FileConverterAI() {
   };
 
   const handleSubmit = async () => {
-    // Check conversion count before proceeding
+    if (files.length === 0 && prompt.trim() === "") {
+      toast.error("Please upload at least one file and enter a prompt before submitting");
+      return;
+    }
+    if (files.length === 0) {
+      toast.error("Please upload at least one file before submitting");
+      return;
+    }
+    if (prompt.trim() === "") {
+      toast.error("Please enter a prompt before submitting");
+      return;
+    }
+
+
     if (conversionCount >= 5) {
       setShowAlert(true);
       return;
@@ -159,7 +173,7 @@ export default function FileConverterAI() {
       )}
       <HowToCollapsible />
       <FileInput
-        type="file"
+        type="file"   
         onChange={handleFileChange}
         multiple
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
