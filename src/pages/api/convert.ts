@@ -7,11 +7,20 @@ import { utapi } from "src/server/uploadthing.ts";
 import { v4 as uuidv4 } from 'uuid';
 import { Worker } from 'worker_threads';
 import Cerebras from '@cerebras/cerebras_cloud_sdk';
+import { UploadThingToken } from 'uploadthing/types';
+import { Schema } from 'effect';
+
 // import * as weave from 'weave'  
 
 dotenv.config();
 
 export const POST: APIRoute = async ({ request }) => {
+    console.log("process.env.UPLOADTHING_TOKEN", process.env.UPLOADTHING_TOKEN);
+    const token = Schema.decodeUnknownSync(UploadThingToken)(
+        process.env.UPLOADTHING_TOKEN,
+    );
+    console.log("token", token);
+
     const imagesDir = path.join('/tmp', 'images');
     const client = new Cerebras({ apiKey: process.env['CERBERAS_API_KEY'] });
 
@@ -168,7 +177,7 @@ processImages().catch(error => {
                         npm_config_cache: '/tmp/npm-cache'
                     }
                 },
-                (error: any, stdout: string, stderr: string) => {
+                (error: any, _: string, stderr: string) => {
                     if (error) {
                         console.error('Error installing dependencies:', error);
                         console.error('stderr:', stderr);
@@ -183,7 +192,7 @@ processImages().catch(error => {
 
         // console.log("listing directory contents");
         await new Promise((resolve, reject) => {
-            exec('ls -a', (error: any, stdout: string, _: string) => {
+            exec('ls -a', (error: any, __: string, _: string) => {
                 if (error) {
                     console.error('Error listing directory:', error);
                     reject(error);
@@ -301,7 +310,7 @@ processImages().catch(error => {
 
             worker.on('exit', (code) => {
                 // console.log(`Worker exited with code ${code}`);
-                // Clean up the worker file
+                // Clean up the workerfile
                 unlink(workerFilePath).catch(console.error);
                 if (code !== 0) {
                     reject(new Response(JSON.stringify({ message: 'Worker exited with non-zero code', code }), {
