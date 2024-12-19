@@ -41,7 +41,7 @@ export default function HowToCollapsible() {
         </CollapsibleTrigger>
       </div>
       <CollapsibleContent className="mt-2 space-y-2">
-        <p className="text-sm">1. Upload your files using the Choose Files button</p>
+        <p className="text-sm">1. Upload up to 10 files using the Choose Files button</p>
         <p className="text-sm">2. Explain below how you want your files converted</p>
         <p className="text-sm">3. Click Download All Files to get your converted files.</p>
       </CollapsibleContent>

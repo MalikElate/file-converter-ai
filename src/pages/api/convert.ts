@@ -64,70 +64,98 @@ export const POST: APIRoute = async ({ request }) => {
 
     let imageFiles: File[] = [];
     let fileNames: string[] = [];
-    const imageFile1 = formData.get('file0') as File;
-    if (!imageFile1) {
-        throw new Error('No image file provided');
-    } else {
-        const extension = imageFile1.name.split('.').pop() || 'png';
-        const buffer = Buffer.from(await imageFile1.arrayBuffer());
-        await writeFile(path.join(imagesDir, `file0.${extension}`), buffer);
-        imageFiles.push(imageFile1);
-        fileNames.push(`file0.${extension}`);
-    }
-    const imageFile2 = formData.get('file1') as File;
-    if (imageFile2) {
-        const extension = imageFile2.name.split('.').pop() || 'png';
-        const buffer = Buffer.from(await imageFile2.arrayBuffer());
-        await writeFile(path.join(imagesDir, `file1.${extension}`), buffer);
-        imageFiles.push(imageFile2);
-        fileNames.push(`file1.${extension}`);
-    }
-    const imageFile3 = formData.get('file2') as File;
-    if (imageFile3) {
-        const extension = imageFile3.name.split('.').pop() || 'png';
-        const buffer = Buffer.from(await imageFile3.arrayBuffer());
-        await writeFile(path.join(imagesDir, `file2.${extension}`), buffer);
-        imageFiles.push(imageFile3);
-        fileNames.push(`file2.${extension}`);
+
+    // Process up to 10 files
+    for (let i = 0; i < 10; i++) {
+        const imageFile = formData.get(`file${i}`) as File;
+        if (!imageFile) {
+            if (i === 0) {
+                throw new Error('No image file provided');
+            }
+            break;
+        }
+        const extension = imageFile.name.split('.').pop() || 'png';
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        await writeFile(path.join(imagesDir, `file${i}.${extension}`), buffer);
+        imageFiles.push(imageFile);
+        fileNames.push(`file${i}.${extension}`);
     }
 
     // console.log("imageFiles", imageFiles);
-    const systemPrompt = `Given the input return a node js script that can do the photo editing work described by the user  | use ES module imports (import syntax) instead of require | for image resizing use the sharp library, like so: import sharp from 'sharp';| when you use sharp or other async libs remember to await them. for example // Process the image
+    const systemPrompt = `
+    Given the input return a node js script that can do the photo editing work described by the user  
+    | use ES module imports (import syntax) instead of require 
+    | for image resizing use the sharp library, like so: import sharp from 'sharp'; 
+    | when you use sharp or other async libs remember to await them. for example // Process the image
     await sharp(imagePath1)
       .toFormat('png')
-      .toFile(path.join(outputDir, outputFileName)); | the files are located at " + imagesDir + " | Don't include any characters like '\\n' | I need the code to just be the syntax, not formatted as text | do NOT include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: | Do not wrap your responses in backticks | there are up to 10 images to work with, if theres one the file will be called file0.[some extension], if there are two the files will be called file0.[some extension] and file1.[some extension] and so on, if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; This array will be the names of the files that were created | when responding with file names, only include the file name, not the path. for example return 'resized_100x100.png' and not '/tmp/images/resized_100x100.png'  | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file | do not import path twice | save your edited images to the /tmp/images directory using const outputDir = '/tmp/images'; | do not provide multiple versions of the script | do not include any additonal words, phrases, text, characters, or anything else besides the script | Do not import import { console } from 'console'; or add anything extra IMPORTANT:  1. Only process the files that are explicitly named in the fileNames array 2. Do not search for additional files or use loops to find files3. Use direct file processing - no need to check if files exist 4. Keep the code simple and linear 5. Each file will be available at /tmp/images/file0.[extension], file1.[extension], etc. 6. Do not use fs.access or file searching logic 7. Process only the files mentioned in the prompt 8. Return an array of the output filenames using parentPort.postMessage([filename1, filename2, ...])     import sharp from 'sharp';    import path from 'path';    Example structure:import { parentPort } from 'worker_threads'; const outputDir = '/tmp/images'; // Process specific files directly // Send results back | here is an example prompt and example output script you would return: convert to png 
+      .toFile(path.join(outputDir, outputFileName)); 
+    | the files are located at " + imagesDir + " 
+    | Don't include any characters like '\\n' 
+    | I need the code to just be the syntax, not formatted as text 
+    | do NOT include any leading text or trailing text such as: Here's a Node.js script that creates three copies of the specified file: 
+    | Do not wrap your responses in backticks 
+    | there are up to 10 images to work with, if theres one the file will be called file0.[some extension], 
+    if there are two the files will be called file0.[some extension] and file1.[some extension] and so on, 
+    if there are three the files will be called file0.[some extension], file1.[some extension], and file2.[some extension] 
+    | after all the scripts are done running send the files back to the server using import { parentPort, workerData } from 'worker_threads'; 
+    parentPort.postMessage([possibleFileName1, possibleFileName2, possibleFileName3]); }; 
+    This array will be the names of the files that were created 
+    | when responding with file names, only include the file name, not the path. for example return 'resized_100x100.png' 
+    and not '/tmp/images/resized_100x100.png'  
+    | if this is a file conversion be sure to include the file extension in the file names, and come up with a new name for the file 
+    | do not import path twice 
+    | save your edited images to the /tmp/images directory using const outputDir = '/tmp/images'; 
+    | do not provide multiple versions of the script 
+    | do not include any additonal words, phrases, text, characters, or anything else besides the script 
+    | Do not import import { console } from 'console'; or add anything extra 
+    
+    IMPORTANT:  
+    1. Only process the files that are explicitly named in the fileNames array 
+    2. Do not search for additional files or use loops to find files
+    3. Use direct file processing - no need to check if files exist 
+    4. Keep the code simple and linear 
+    5. Each file will be available at /tmp/images/file0.[extension], file1.[extension], etc. 
+    6. Do not use fs.access or file searching logic 
+    7. Process only the files mentioned in the prompt 
+    8. Return an array of the output filenames using parentPort.postMessage([filename1, filename2, ...])     
+    import sharp from 'sharp';    
+    import path from 'path';    
+    Example structure:import { parentPort } from 'worker_threads'; 
+    const outputDir = '/tmp/images'; // Process specific files directly // Send results back 
+    | here is an example prompt and example output script you would return: convert to png 
     import sharp from 'sharp';
-import path from 'path';
-import { parentPort, workerData } from 'worker_threads';
+    import path from 'path';
+    import { parentPort, workerData } from 'worker_threads';
 
-async function processImages() {
-  const { imagePath1 } = workerData;
-  const outputDir = '/tmp/images';
-  const outputFilenames = [];
+    async function processImages() {
+      const { imagePath1 } = workerData;
+      const outputDir = '/tmp/images';
+      const outputFilenames = [];
 
-  try {
-    // Get the input filename
-    const fileName = path.basename(imagePath1);
-    const outputFileName = 'png_' + path.parse(fileName).name + '.png';
-    outputFilenames.push(outputFileName);
+      try {
+        // Get the input filename
+        const fileName = path.basename(imagePath1);
+        const outputFileName = 'png_' + path.parse(fileName).name + '.png';
+        outputFilenames.push(outputFileName);
 
-    // Process the image
-    await sharp(imagePath1)
-      .toFormat('png')
-      .toFile(path.join(outputDir, outputFileName));
+        // Process the image
+        await sharp(imagePath1)
+          .toFormat('png')
+          .toFile(path.join(outputDir, outputFileName));
 
-    // Send the processed filenames back to the main thread
-    parentPort.postMessage(outputFilenames);
-  } catch (error) {
-    console.error('Error processing image:', error);
-    throw error;
-  }
-}
+        // Send the processed filenames back to the main thread
+        parentPort.postMessage(outputFilenames);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        throw error;
+      }
+    }
 
-processImages().catch(error => {
-  console.error('Worker error:', error);
-  process.exit(1);
-});   
+    processImages().catch(error => {
+      console.error('Worker error:', error);
+      process.exit(1);
+    });   
     `
 
     try {
@@ -198,23 +226,15 @@ processImages().catch(error => {
                     reject(error);
                 }
                 // console.log('Directory contents:', stdout);
-                resolve(null);
+                resolve(null)
             });
         });
 
         const content = msg;
 
-        let imagePath1: any;
-        let imagePath2: any;
-        let imagePath3: any;
-        if (imageFile1) {
-            imagePath1 = path.join(imagesDir, `${imageFiles[0].name}.png`);
-        }
-        if (imageFile2) {
-            imagePath2 = path.join(imagesDir, `${imageFiles[1].name}.png`);
-        }
-        if (imageFile3) {
-            imagePath3 = path.join(imagesDir, `${imageFiles[2].name}.png`);
+        let imagePaths: Record<string, string> = {};
+        for (let i = 0; i < imageFiles.length; i++) {
+            imagePaths[`imagePath${i + 1}`] = path.join(imagesDir, `file${i}.${imageFiles[i].name.split('.').pop() || 'png'}`);
         }
 
         await mkdir(workersDir, { recursive: true });
@@ -222,12 +242,9 @@ processImages().catch(error => {
         // Write the worker file
         if (typeof content === 'string') {
             const workerContentTemp = `
-            // const imagePath1 = '${imagePath1}';
-            // const imagePath2 = '${imagePath2}';
-            // const imagePath3 = '${imagePath3}';
-            ${content}
-        `;
-            const workerContent = workerContentTemp
+                ${content}
+            `;
+            const workerContent = workerContentTemp;
             await writeFile(workerFilePath, workerContent);
             console.log(content);
         } else {
@@ -235,8 +252,7 @@ processImages().catch(error => {
         }
 
         return new Promise((resolve, reject) => {
-
-            const worker = new Worker(workerFilePath, { workerData: { imagePath1, imagePath2, imagePath3 } });
+            const worker = new Worker(workerFilePath, { workerData: imagePaths });
 
             worker.on('message', async (message) => {
                 // console.log('Message from worker:', message);

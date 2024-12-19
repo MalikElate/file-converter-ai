@@ -87,7 +87,20 @@ export default function FileConverterAI() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles((prevFiles) => [...prevFiles, ...Array.from(e.target.files!)]);
+      const selectedFiles = Array.from(e.target.files);
+      const totalFiles = files.length + selectedFiles.length;
+      
+      if (totalFiles > 10) {
+        toast.error("Maximum of 10 files allowed");
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
+      
+      // Check if adding these files would exceed the limit
+      if (files.length + selectedFiles.length <= 10) {
+        setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+      }
     }
   };
 
@@ -112,7 +125,10 @@ export default function FileConverterAI() {
       toast.error("Please enter a prompt before submitting");
       return;
     }
-
+    if (files.length > 10) {
+      toast.error("Maximum of 10 files allowed");
+      return;
+    }
 
     if (conversionCount >= 5) {
       setShowAlert(true);
@@ -122,7 +138,8 @@ export default function FileConverterAI() {
     setLoading(true);
     try {
       const formData = new FormData();
-      files.forEach((file, index) => {
+      // Only process up to 10 files
+      files.slice(0, 10).forEach((file, index) => {
         formData.append(`file${index}`, file);
       });
       formData.append("prompt", prompt);
@@ -177,6 +194,7 @@ export default function FileConverterAI() {
         onChange={handleFileChange}
         multiple
         className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+        max="10"
       />
       {stagedFiles.length > 0 && files.length > 0 && (
         <div className="flex items-center mb-2 text-sm">
@@ -210,7 +228,7 @@ export default function FileConverterAI() {
               <div>{file.name}</div>
               <div className="flex justify-between text-xs">
                 <span>{formatFileSize(file.size)}</span>
-                <span className="file-info" data-dimensions="Loading..."></span>
+                <span className="file-info" data-dimensions="Thinking..."></span>
               </div>
             </div>
           </div>
