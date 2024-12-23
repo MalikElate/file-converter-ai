@@ -3,7 +3,7 @@ dist/
 images/
 edited-images/
 edited-images.zip
-EVALUATIONS.md
+evaluations/
 
 # generated types
 .astro/

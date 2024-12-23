@@ -167,7 +167,28 @@ export default function FileConverterAI() {
 
     
     } catch (error) {
-      console.error("Error submitting files and prompt:", error);
+      // console.error("Error submitting files and prompt:", error);
+
+      // Send error to our error handling endpoint
+      try {
+        await fetch("/api/error-handler", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt,
+            fileNames: files.map(f => f.name),
+            error: error instanceof Error ? error.message : 'Unknown error'
+          })
+        });
+      } catch (webhookError) {
+        console.error("Failed to send error to webhook:", webhookError);
+      }
+      
+      toast.error("Error processing your request", {
+        description: "Our team has been notified and will look into it."
+      });
     } finally {
       setLoading(false);
       // Increment conversion count
