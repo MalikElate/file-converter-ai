@@ -1,8 +1,13 @@
 
 # File Converter AI
 
-## Version 0.2 
+# Version 0.4 
     promote on reddit []
+    promote on tiktok []
+    prevent submission without a prompt [x]
+    gracfully handle no file error [x]
+
+## Version 0.5
     set up paid tier []
         check if the users has credits if yes remove banner and allow submissions [x]
         block usage based on localstorage [x]
@@ -16,14 +21,9 @@
     Set up domain [x]
     Add instructions [x]
 
-# Version 0.3 
-    prevent submission without a prompt []
-    gracfully handle no file error []
-
-
 ## Nice to haves
     Track prompts, files, and results [] 
-    set a min width for images 
+    set a min width for images []
     Support more file types []
     Add chat []
     have any errors displayed on screen []

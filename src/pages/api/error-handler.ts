@@ -4,7 +4,14 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     console.log("Error handler called");``
     const data = await request.json();
-    
+    if (process.env.PROD === 'false') {
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
     // Send to Zapier webhook
     const response = await fetch('https://hooks.zapier.com/hooks/catch/12248912/289lwr8/', {
       method: 'POST',
